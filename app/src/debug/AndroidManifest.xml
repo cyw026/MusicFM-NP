@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest
-    package="org.schabi.newpipe"
+    package="com.hr.musicfm"
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
@@ -12,6 +12,6 @@
 
     <application
         tools:replace="android:name"
-        android:name=".DebugApp"/>
+        android:name="com.hr.musicfm.DebugApp"/>
 
 </manifest>

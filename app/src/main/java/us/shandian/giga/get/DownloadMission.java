@@ -16,7 +16,7 @@ import java.util.Map;
 
 import us.shandian.giga.util.Utility;
 
-import static org.schabi.newpipe.BuildConfig.DEBUG;
+import static com.hr.musicfm.BuildConfig.DEBUG;
 
 public class DownloadMission {
     private static final String TAG = DownloadMission.class.getSimpleName();

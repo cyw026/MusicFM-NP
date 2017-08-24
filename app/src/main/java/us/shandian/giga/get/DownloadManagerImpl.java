@@ -19,7 +19,7 @@ import java.util.List;
 
 import us.shandian.giga.util.Utility;
 
-import static org.schabi.newpipe.BuildConfig.DEBUG;
+import static com.hr.musicfm.BuildConfig.DEBUG;
 
 public class DownloadManagerImpl implements DownloadManager {
     private static final String TAG = DownloadManagerImpl.class.getSimpleName();

@@ -7,7 +7,7 @@ import java.io.RandomAccessFile;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-import static org.schabi.newpipe.BuildConfig.DEBUG;
+import static com.hr.musicfm.BuildConfig.DEBUG;
 
 /**
  * Runnable to download blocks of a file until the file is completely downloaded,

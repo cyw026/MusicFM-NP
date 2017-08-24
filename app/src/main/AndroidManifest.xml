@@ -2,7 +2,7 @@
 <manifest
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    package="org.schabi.newpipe">
+    package="com.hr.musicfm">
 
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
@@ -11,7 +11,7 @@
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
 
     <application
-        android:name=".App"
+        android:name="com.hr.musicfm.App"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -19,7 +19,7 @@
         android:theme="@style/AppTheme"
         tools:ignore="AllowBackup">
         <activity
-            android:name=".MainActivity"
+            android:name="com.hr.musicfm.MainActivity"
             android:label="@string/app_name"
             android:launchMode="singleTask">
             <intent-filter>
@@ -29,31 +29,31 @@
         </activity>
 
         <activity
-            android:name=".player.PlayVideoActivity"
+            android:name="com.hr.musicfm.player.PlayVideoActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:theme="@style/VideoPlayerTheme"
             tools:ignore="UnusedAttribute"/>
 
         <service
-            android:name=".player.BackgroundPlayer"
+            android:name="com.hr.musicfm.player.BackgroundPlayer"
             android:exported="false"/>
 
         <service
-            android:name=".player.PopupVideoPlayer"
+            android:name="com.hr.musicfm.player.PopupVideoPlayer"
             android:exported="false"/>
 
         <activity
-            android:name=".player.MainVideoPlayer"
+            android:name="com.hr.musicfm.player.MainVideoPlayer"
             android:configChanges="keyboard|keyboardHidden|orientation|screenSize"
             android:label="@string/app_name"
             android:launchMode="singleTask"
             android:theme="@style/PlayerTheme"/>
 
         <activity
-            android:name=".settings.SettingsActivity"
+            android:name="com.hr.musicfm.settings.SettingsActivity"
             android:label="@string/settings"/>
         <activity
-            android:name=".PanicResponderActivity"
+            android:name="com.hr.musicfm.PanicResponderActivity"
             android:launchMode="singleInstance"
             android:noHistory="true"
             android:theme="@android:style/Theme.NoDisplay">
@@ -64,14 +64,14 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".ExitActivity"
+            android:name="com.hr.musicfm.ExitActivity"
             android:label="@string/general_error"
             android:theme="@android:style/Theme.NoDisplay"/>
-        <activity android:name=".report.ErrorActivity"/>
+        <activity android:name="com.hr.musicfm.report.ErrorActivity"/>
 
         <!-- giga get related -->
         <activity
-            android:name=".download.DownloadActivity"
+            android:name="com.hr.musicfm.download.DownloadActivity"
             android:label="@string/app_name"
             android:launchMode="singleTask"
             android:theme="@style/AppTheme"/>
@@ -84,7 +84,7 @@
             android:launchMode="singleTop"
             android:theme="@style/FilePickerTheme"/>
         <activity
-            android:name=".ReCaptchaActivity"
+            android:name="com.hr.musicfm.ReCaptchaActivity"
             android:label="@string/reCaptchaActivity"/>
 
         <provider
@@ -98,7 +98,7 @@
         </provider>
 
         <activity
-            android:name=".RouterActivity"
+            android:name="com.hr.musicfm.RouterActivity"
             android:taskAffinity=""
             android:theme="@android:style/Theme.NoDisplay">
             <intent-filter>
@@ -157,7 +157,7 @@
         </activity>
 
         <activity
-            android:name=".RouterPopupActivity"
+            android:name="com.hr.musicfm.RouterPopupActivity"
             android:taskAffinity=""
             android:theme="@android:style/Theme.NoDisplay"
             android:label="@string/popup_mode_share_menu_title">
@@ -211,11 +211,11 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".about.AboutActivity"
+            android:name="com.hr.musicfm.about.AboutActivity"
             android:label="@string/title_activity_about"
             android:theme="@style/AppTheme" />
         <activity
-            android:name=".history.HistoryActivity"
+            android:name="com.hr.musicfm.history.HistoryActivity"
             android:label="@string/title_activity_history"
             android:theme="@style/AppTheme" />
     </application>
