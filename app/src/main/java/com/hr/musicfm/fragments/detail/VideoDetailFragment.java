@@ -949,7 +949,7 @@ public class VideoDetailFragment extends BaseFragment implements StreamExtractor
         videoTitleToggleArrow.setVisibility(View.VISIBLE);
         videoTitleRoot.setClickable(true);
 
-        AnimationUtils.animateView(spinnerToolbar, true, 500);
+//        AnimationUtils.animateView(spinnerToolbar, true, 500);
         setupActionBarHandler(info);
         initThumbnailViews(info);
         initRelatedVideos(info);

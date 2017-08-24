@@ -2,8 +2,8 @@ package com.hr.musicfm.workers;
 
 import android.content.Context;
 
-import com.hr.musicfm.extractor.playlist.PlaylistExtractor;
-import com.hr.musicfm.extractor.playlist.PlaylistInfo;
+import com.hr.musicfm.extractor.playlist.PlayListExtractor;
+import com.hr.musicfm.extractor.playlist.PlayListInfo;
 import com.hr.musicfm.extractor.exceptions.ExtractionException;
 import com.hr.musicfm.extractor.exceptions.ParsingException;
 import com.hr.musicfm.MainActivity;
@@ -15,7 +15,7 @@ import java.io.IOException;
 import static com.hr.musicfm.report.UserAction.REQUESTED_PLAYLIST;
 
 /**
- * Extract {@link ChannelInfo} with {@link ChannelExtractor} from the given url of the given service
+ * Extract {@link PlayListInfo} with {@link PlayListExtractor} from the given url of the given service
  *
  * @author mauriciocolli
  */

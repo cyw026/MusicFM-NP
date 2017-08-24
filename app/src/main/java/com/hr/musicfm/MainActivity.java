@@ -88,6 +88,8 @@ public class MainActivity extends AppCompatActivity implements
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        getSupportActionBar().setTitle(R.string.app_name);
+
         AppDatabase database = NewPipeDatabase.getInstance(this);
         watchHistoryDAO = database.watchHistoryDAO();
         searchHistoryDAO = database.searchHistoryDAO();
@@ -190,7 +192,7 @@ public class MainActivity extends AppCompatActivity implements
 
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
-            actionBar.setDisplayShowTitleEnabled(false);
+//            actionBar.setDisplayShowTitleEnabled(false);
             actionBar.setDisplayHomeAsUpEnabled(false);
         }
         return true;

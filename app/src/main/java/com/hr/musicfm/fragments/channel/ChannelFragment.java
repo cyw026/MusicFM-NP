@@ -209,6 +209,7 @@ private final String TAG = "ChannelFragment@" + Integer.toHexString(hashCode());
             supportActionBar.setDisplayHomeAsUpEnabled(true);
         }
         menu.findItem(R.id.menu_item_rss).setVisible( !TextUtils.isEmpty(feedUrl) );
+        menu.setGroupVisible(0, false);
     }
 
     @Override

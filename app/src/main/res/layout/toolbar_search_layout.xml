@@ -28,7 +28,7 @@
         android:inputType="textFilter|textNoSuggestions"
         android:maxLines="1"
         tools:hint="Search..."
-        tools:ignore="RtlHardcoded"/>
+        tools:ignore="RtlHardcoded" />
 
     <FrameLayout
         android:id="@+id/toolbar_search_clear"

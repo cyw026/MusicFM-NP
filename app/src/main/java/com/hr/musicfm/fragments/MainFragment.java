@@ -78,7 +78,7 @@ public class MainFragment extends Fragment implements TabLayout.OnTabSelectedLis
 
         ActionBar supportActionBar = activity.getSupportActionBar();
         if (supportActionBar != null) {
-            supportActionBar.setDisplayShowTitleEnabled(false);
+//            supportActionBar.setDisplayShowTitleEnabled(false);
             supportActionBar.setDisplayHomeAsUpEnabled(false);
         }
     }
