@@ -11,6 +11,7 @@ public enum UserAction {
     USER_REPORT("user report"),
     LOAD_IMAGE("load image"),
     UI_ERROR("ui error"),
+    REQUESTED_PLAYLIST("requested playlist"),
     REQUESTED_CHANNEL("requested channel");
 
 
