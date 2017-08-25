@@ -1,18 +1,26 @@
 package com.hr.musicfm.info_list;
 
 import android.app.Activity;
+import android.content.Context;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AbsListView;
 
 import com.hr.musicfm.extractor.InfoItem;
+import com.hr.musicfm.extractor.InfoItem.InfoType;
+import com.hr.musicfm.info_list.AdViewHolder;
 import com.hr.musicfm.R;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdView;
+import com.google.android.gms.ads.AdSize;
+import com.google.android.gms.ads.AdListener;
 /**
  * Created by Christian Schabesberger on 01.08.16.
  *
@@ -41,6 +49,7 @@ public class InfoListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     private boolean showFooter = false;
     private View header = null;
     private View footer = null;
+    private static final int AD_TYPE = 4;
 
     public class HFHolder extends RecyclerView.ViewHolder {
         public HFHolder(View v) {
@@ -53,6 +62,14 @@ public class InfoListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     public void showFooter(boolean show) {
         showFooter = show;
         notifyDataSetChanged();
+    }
+
+    public class AdHolder extends RecyclerView.ViewHolder {
+        public AdHolder(View v) {
+            super(v);
+            view = v;
+        }
+        public View view;
     }
 
     public InfoListAdapter(Activity a) {
@@ -72,7 +89,15 @@ public class InfoListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
     public void addInfoItemList(List<InfoItem> data) {
         if(data != null) {
-            infoItemList.addAll(data);
+            for(int i=0;i<data.size();i++){
+                if(i > 0 && i%5==0)
+                {
+                    infoItemList.add(null);
+                }
+                infoItemList.add(data.get(i));
+            }
+
+//            infoItemList.addAll(data);
             notifyDataSetChanged();
         }
     }
@@ -125,7 +150,12 @@ public class InfoListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         if(footer != null && position == infoItemList.size() && showFooter) {
             return 1;
         }
+
         InfoItem item = infoItemList.get(position);
+
+        if(item==null)
+            return AD_TYPE;
+
         switch(item.infoType()) {
             case STREAM:
                 return 2;
@@ -154,7 +184,7 @@ public class InfoListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
                         .inflate(R.layout.channel_item, parent, false));
             case 4:
                 Log.e(TAG, "Playlist is not yet implemented");
-                return null;
+                return createAdView(parent);
             default:
                 Log.e(TAG, "Trollolo");
                 return null;
@@ -175,4 +205,57 @@ public class InfoListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
             ((HFHolder) holder).view = footer;
         }
     }
+
+    public RecyclerView.ViewHolder createAdView(ViewGroup parent) {
+
+        Context context = parent.getContext();
+        AdView v = new AdView(context);
+        v.setAdSize(AdSize.SMART_BANNER);
+        v.setAdUnitId("ca-app-pub-5814663467390565/6721235260");
+
+        v.setAdListener(new AdListener() {
+            @Override
+            public void onAdLoaded() {
+                // Code to be executed when an ad finishes loading.
+                Log.i("Ads", "onAdLoaded");
+            }
+
+            @Override
+            public void onAdFailedToLoad(int errorCode) {
+                // Code to be executed when an ad request fails.
+                Log.i("Ads", "onAdFailedToLoad");
+            }
+
+            @Override
+            public void onAdOpened() {
+                // Code to be executed when an ad opens an overlay that
+                // covers the screen.
+                Log.i("Ads", "onAdOpened");
+            }
+
+            @Override
+            public void onAdLeftApplication() {
+                // Code to be executed when the user has left the app.
+                Log.i("Ads", "onAdLeftApplication");
+            }
+
+            @Override
+            public void onAdClosed() {
+                // Code to be executed when when the user is about to return
+                // to the app after tapping on an ad.
+                Log.i("Ads", "onAdClosed");
+            }
+        });
+
+//        float density = parent.getContext().getResources().getDisplayMetrics().density;
+//        int height = Math.round(AdSize.SMART_BANNER.getHeight() * density);
+//        AbsListView.LayoutParams params = new AbsListView.LayoutParams(AbsListView.LayoutParams.MATCH_PARENT,height);
+//        v.setLayoutParams(params);
+        AdRequest adRequest = new AdRequest.Builder().build();
+        v.loadAd(adRequest);
+
+        AdHolder viewHolder = new AdHolder(v);
+        return viewHolder;
+    }
+
 }

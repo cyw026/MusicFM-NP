@@ -1,5 +1,6 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <resources>
+    <string name="banner_ad_unit_id">ca-app-pub-5814663467390565/6721235260</string>
     <string name="app_name" translatable="false">Music FM</string>
     <string name="main_bg_subtitle">Tap search to get started</string>
     <string name="view_count_text">%1$s views</string>

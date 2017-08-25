@@ -1,0 +1,107 @@
+{
+  "project_info": {
+    "project_number": "336538153410",
+    "firebase_url": "https://music-fm-487cf.firebaseio.com",
+    "project_id": "music-fm-487cf",
+    "storage_bucket": "music-fm-487cf.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:336538153410:android:5c44e016d6a904f6",
+        "android_client_info": {
+          "package_name": "com.hr.musicfm"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "336538153410-94138gj2fqlsmbo9midt9b2eqlrcohf7.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.hr.musicfm",
+            "certificate_hash": "b74d027abb433b95aa4d4429ee5c49182e149d28"
+          }
+        },
+        {
+          "client_id": "336538153410-tspubvh4kr65r6jgj4lh5sp354l13qbo.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.hr.musicfm",
+            "certificate_hash": "f348d2d590ecf3da3e7bb3b262b0a192ff70a380"
+          }
+        },
+        {
+          "client_id": "336538153410-65m97tja9lr5u3reegf54e4tvtp8pbdv.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBfaalvZeERdvx7PGDdoxi_WtbFNISxYJg"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "336538153410-65m97tja9lr5u3reegf54e4tvtp8pbdv.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:336538153410:android:09da31f5fab0ef7c",
+        "android_client_info": {
+          "package_name": "com.hr.musicfm.debug"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "336538153410-0fdcmjdrlmudo0uen8ugi4a91n8bjuo5.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.hr.musicfm.debug",
+            "certificate_hash": "b74d027abb433b95aa4d4429ee5c49182e149d28"
+          }
+        },
+        {
+          "client_id": "336538153410-65m97tja9lr5u3reegf54e4tvtp8pbdv.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBfaalvZeERdvx7PGDdoxi_WtbFNISxYJg"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "336538153410-65m97tja9lr5u3reegf54e4tvtp8pbdv.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

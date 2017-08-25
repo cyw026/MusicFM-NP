@@ -52,6 +52,7 @@ import com.hr.musicfm.extractor.stream_info.StreamInfo;
 import com.hr.musicfm.fragments.detail.VideoDetailFragment;
 import com.hr.musicfm.fragments.search.SearchFragment;
 import com.hr.musicfm.util.ThemeHelper;
+import com.google.android.gms.ads.MobileAds;
 
 import java.util.Date;
 
@@ -98,6 +99,8 @@ public class MainActivity extends AppCompatActivity implements
         historyEntrySubject
                 .observeOn(Schedulers.io())
                 .subscribe(createHistoryEntryConsumer());
+
+//        MobileAds.initialize(this, "ca-app-pub-5814663467390565~6175163138");
     }
 
     @NonNull

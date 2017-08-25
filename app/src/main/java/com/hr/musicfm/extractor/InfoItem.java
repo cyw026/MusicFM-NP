@@ -26,7 +26,8 @@ public interface InfoItem extends Serializable{
     enum InfoType {
         STREAM,
         PLAYLIST,
-        CHANNEL
+        CHANNEL,
+        AD_VIEW
     }
 
     InfoType infoType();

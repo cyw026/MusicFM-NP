@@ -23,6 +23,7 @@ import com.hr.musicfm.util.ThemeHelper;
 
 import info.guardianproject.netcipher.NetCipher;
 import info.guardianproject.netcipher.proxy.OrbotHelper;
+import android.support.multidex.*;
 
 /**
  * Copyright (C) Hans-Christoph Steiner 2016 <hans@eds.org>
@@ -134,5 +135,11 @@ public class App extends Application {
 
         NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         mNotificationManager.createNotificationChannel(mChannel);
+    }
+
+    @Override
+    protected void attachBaseContext(Context base) {
+        super.attachBaseContext(base);
+        MultiDex.install(this) ;
     }
 }
