@@ -215,9 +215,6 @@ public class MainActivity extends AppCompatActivity implements
                 NavigationHelper.openSettings(this);
                 return true;
             }
-            case R.id.action_show_downloads: {
-                return NavigationHelper.openDownloads(this);
-            }
             case R.id.action_about:
                 NavigationHelper.openAbout(this);
                 return true;

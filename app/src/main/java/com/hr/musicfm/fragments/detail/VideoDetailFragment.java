@@ -47,7 +47,6 @@ import com.nostra13.universalimageloader.core.assist.FailReason;
 import com.nostra13.universalimageloader.core.listener.SimpleImageLoadingListener;
 import com.hr.musicfm.ImageErrorLoadingListener;
 import com.hr.musicfm.ReCaptchaActivity;
-import com.hr.musicfm.download.DownloadDialog;
 import com.hr.musicfm.extractor.InfoItem;
 import com.hr.musicfm.extractor.MediaFormat;
 import com.hr.musicfm.extractor.NewPipe;
@@ -717,24 +716,6 @@ public class VideoDetailFragment extends BaseFragment implements StreamExtractor
                                 }
                             });
                     builder.create().show();
-                }
-            }
-        });
-
-        actionBarHandler.setOnDownloadListener(new ActionBarHandler.OnActionListener() {
-            @Override
-            public void onActionSelected(int selectedStreamId) {
-
-                if (isLoading.get() || !PermissionHelper.checkStoragePermissions(activity)) {
-                    return;
-                }
-
-                try {
-                    DownloadDialog downloadDialog = DownloadDialog.newInstance(info, sortedStreamVideosList, selectedStreamId);
-                    downloadDialog.show(activity.getSupportFragmentManager(), "downloadDialog");
-                } catch (Exception e) {
-                    Toast.makeText(activity, R.string.could_not_setup_download_menu, Toast.LENGTH_LONG).show();
-                    e.printStackTrace();
                 }
             }
         });

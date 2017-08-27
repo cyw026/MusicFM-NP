@@ -10,7 +10,6 @@ import android.support.v4.app.FragmentManager;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.hr.musicfm.MainActivity;
 import com.hr.musicfm.about.AboutActivity;
-import com.hr.musicfm.download.DownloadActivity;
 import com.hr.musicfm.extractor.NewPipe;
 import com.hr.musicfm.extractor.StreamingService;
 import com.hr.musicfm.extractor.stream_info.AudioStream;
@@ -228,12 +227,4 @@ public class NavigationHelper {
         context.startActivity(intent);
     }
 
-    public static boolean openDownloads(Activity activity) {
-        if (!PermissionHelper.checkStoragePermissions(activity)) {
-            return false;
-        }
-        Intent intent = new Intent(activity, DownloadActivity.class);
-        activity.startActivity(intent);
-        return true;
-    }
 }

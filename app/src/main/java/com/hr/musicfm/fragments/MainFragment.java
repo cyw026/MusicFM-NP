@@ -63,6 +63,8 @@ public class MainFragment extends Fragment implements TabLayout.OnTabSelectedLis
 
         tabLayout.setupWithViewPager(viewPager);
 
+        if (activity.getSupportActionBar() != null) activity.getSupportActionBar().setTitle(R.string.app_name);
+
         return inflatedView;
     }
 
@@ -78,7 +80,7 @@ public class MainFragment extends Fragment implements TabLayout.OnTabSelectedLis
 
         ActionBar supportActionBar = activity.getSupportActionBar();
         if (supportActionBar != null) {
-//            supportActionBar.setDisplayShowTitleEnabled(false);
+            supportActionBar.setDisplayShowTitleEnabled(true);
             supportActionBar.setDisplayHomeAsUpEnabled(false);
         }
     }

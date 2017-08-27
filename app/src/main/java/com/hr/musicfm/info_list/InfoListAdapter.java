@@ -16,6 +16,7 @@ import com.hr.musicfm.R;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
@@ -203,15 +204,37 @@ public class InfoListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
             ((HFHolder) holder).view = header;
         } else if(holder instanceof HFHolder && i == infoItemList.size() && footer != null && showFooter) {
             ((HFHolder) holder).view = footer;
+        }else if(holder instanceof AdHolder && infoItemList.get(i) == null) {
+            String[] ids = {
+                    "ca-app-pub-5814663467390565/6721235260",
+                    "ca-app-pub-5814663467390565/1286566443",
+                    "ca-app-pub-5814663467390565/6882809374"
+            };
+
+            AdHolder ad = (AdHolder) holder;
+            AdView v = (AdView) ad.view;
+
+//            Random rand = new Random();
+//            int index = rand.nextInt(3);
+//            v.setAdUnitId(ids[index]);
+            AdRequest adRequest = new AdRequest.Builder().build();
+            v.loadAd(adRequest);
         }
     }
 
     public RecyclerView.ViewHolder createAdView(ViewGroup parent) {
 
+        String[] ids = {
+                "ca-app-pub-5814663467390565/6721235260",
+                "ca-app-pub-5814663467390565/1286566443",
+                "ca-app-pub-5814663467390565/6882809374"
+        };
         Context context = parent.getContext();
         AdView v = new AdView(context);
         v.setAdSize(AdSize.SMART_BANNER);
-        v.setAdUnitId("ca-app-pub-5814663467390565/6721235260");
+        Random rand = new Random();
+        int index = rand.nextInt(3);
+        v.setAdUnitId(ids[index]);
 
         v.setAdListener(new AdListener() {
             @Override
@@ -251,8 +274,6 @@ public class InfoListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 //        int height = Math.round(AdSize.SMART_BANNER.getHeight() * density);
 //        AbsListView.LayoutParams params = new AbsListView.LayoutParams(AbsListView.LayoutParams.MATCH_PARENT,height);
 //        v.setLayoutParams(params);
-        AdRequest adRequest = new AdRequest.Builder().build();
-        v.loadAd(adRequest);
 
         AdHolder viewHolder = new AdHolder(v);
         return viewHolder;

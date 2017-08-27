@@ -26,6 +26,11 @@ import com.hr.musicfm.util.PermissionHelper;
 import com.hr.musicfm.util.ThemeHelper;
 import com.hr.musicfm.R;
 
+import com.google.android.gms.ads.InterstitialAd;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdSize;
+import com.google.android.gms.ads.AdListener;
+
 import static com.hr.musicfm.util.AnimationUtils.animateView;
 
 /**
@@ -42,6 +47,7 @@ public class MainVideoPlayer extends Activity {
 
     private boolean activityPaused;
     private VideoPlayerImpl playerImpl;
+    private InterstitialAd mInterstitialAd;
 
     /*//////////////////////////////////////////////////////////////////////////
     // Activity LifeCycle
@@ -67,6 +73,11 @@ public class MainVideoPlayer extends Activity {
         playerImpl = new VideoPlayerImpl();
         playerImpl.setup(findViewById(android.R.id.content));
         playerImpl.handleIntent(getIntent());
+
+        // adMob
+        mInterstitialAd = new InterstitialAd(this);
+        mInterstitialAd.setAdUnitId("ca-app-pub-5814663467390565/9908605575");
+        mInterstitialAd.loadAd(new AdRequest.Builder().build());
     }
 
     @Override
@@ -81,6 +92,13 @@ public class MainVideoPlayer extends Activity {
         if (DEBUG) Log.d(TAG, "onBackPressed() called");
         super.onBackPressed();
         if (playerImpl.isPlaying()) playerImpl.getPlayer().setPlayWhenReady(false);
+
+        if (mInterstitialAd.isLoaded()) {
+            mInterstitialAd.show();
+        } else {
+            Log.d("TAG", "The interstitial wasn't loaded yet.");
+        }
+
     }
 
     @Override

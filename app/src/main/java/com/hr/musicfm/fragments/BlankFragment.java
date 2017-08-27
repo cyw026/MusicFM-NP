@@ -104,15 +104,6 @@ public class BlankFragment extends BaseFragment implements PlayListExtractorWork
         if (DEBUG) Log.d(TAG, "onCreate() called with: savedInstanceState = [" + savedInstanceState + "]");
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
-        if (savedInstanceState != null) {
-            playlistUrl = savedInstanceState.getString(Constants.KEY_URL);
-            playlistName = savedInstanceState.getString(Constants.KEY_TITLE);
-            serviceId = savedInstanceState.getInt(Constants.KEY_SERVICE_ID, -1);
-
-            pageNumber = savedInstanceState.getInt(PAGE_NUMBER_KEY, 0);
-            Serializable serializable = savedInstanceState.getSerializable(PLAYLIST_INFO_KEY);
-            if (serializable instanceof PlayListInfo) currentPlaylistInfo = (PlayListInfo) serializable;
-        }
         setChannel(0, "https://www.youtube.com/playlist?list=PLFgquLnL59alxIWnf4ivu5bjPeHSlsUe9", "jp");
     }
 
@@ -126,8 +117,7 @@ public class BlankFragment extends BaseFragment implements PlayListExtractorWork
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        if (currentPlaylistInfo == null) loadPage(0);
-        else handlePlaylistInfo(currentPlaylistInfo);
+        currentPlaylistInfo = null;
     }
 
     @Override
@@ -194,6 +184,8 @@ public class BlankFragment extends BaseFragment implements PlayListExtractorWork
         }
 
         resultRecyclerView.setAdapter(infoListAdapter);
+
+        loadPage(0);
     }
 
     @Override
@@ -298,11 +290,13 @@ public class BlankFragment extends BaseFragment implements PlayListExtractorWork
     @Override
     public void onReceive(PlayListInfo info) {
         if (DEBUG) Log.d(TAG, "onReceive() called with: info = [" + info + "]");
+        isLoading.set(false);
+
         if (info == null || isRemoving() || !isVisible()) return;
 
         handlePlaylistInfo(info);
 
-        isLoading.set(false);
+
     }
 
     @Override

@@ -45,7 +45,8 @@
             android:id="@+id/app_description"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/app_description" />
+            android:text="@string/app_description"
+            android:layout_gravity="center_horizontal" />
 
         <TextView
             android:id="@+id/title_contribution"
@@ -53,12 +54,14 @@
             android:layout_height="wrap_content"
             android:paddingTop="10dp"
             android:text="@string/contribution_title"
-            android:textAppearance="@android:style/TextAppearance.Medium" />
+            android:textAppearance="@android:style/TextAppearance.Medium"
+            android:visibility="gone" />
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/contribution_encouragement" />
+            android:text="@string/contribution_encouragement"
+            android:visibility="gone" />
 
 
         <Button
@@ -67,7 +70,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="end"
-            android:text="@string/view_on_github" />
+            android:text="@string/view_on_github"
+            android:visibility="gone" />
 
         <TextView
             android:id="@+id/app_license_title"
@@ -75,13 +79,15 @@
             android:layout_height="wrap_content"
             android:paddingTop="10dp"
             android:text="@string/app_license_title"
-            android:textAppearance="@android:style/TextAppearance.Medium" />
+            android:textAppearance="@android:style/TextAppearance.Medium"
+            android:visibility="gone" />
 
         <TextView
             android:id="@+id/app_license"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/app_license" />
+            android:text="@string/app_license"
+            android:visibility="gone" />
 
         <Button
             android:id="@+id/app_read_license"
@@ -89,7 +95,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="end"
-            android:text="@string/read_full_license" />
+            android:text="@string/read_full_license"
+            android:visibility="gone" />
 
     </LinearLayout>
 </android.support.v4.widget.NestedScrollView>

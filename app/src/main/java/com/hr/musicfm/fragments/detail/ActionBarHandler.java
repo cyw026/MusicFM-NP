@@ -117,11 +117,6 @@ class ActionBarHandler {
                 }
                 return true;
             }
-            case R.id.menu_item_download:
-                if (onDownloadListener != null) {
-                    onDownloadListener.onActionSelected(selectedVideoStream);
-                }
-                return true;
             case R.id.action_play_with_kodi:
                 if (onPlayWithKodiListener != null) {
                     onPlayWithKodiListener.onActionSelected(selectedVideoStream);
@@ -151,10 +146,6 @@ class ActionBarHandler {
 
     public void setOnPlayWithKodiListener(OnActionListener listener) {
         onPlayWithKodiListener = listener;
-    }
-
-    public void showDownloadAction(boolean visible) {
-        menu.findItem(R.id.menu_item_download).setVisible(visible);
     }
 
     public void showPlayWithKodiAction(boolean visible) {
