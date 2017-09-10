@@ -59,8 +59,8 @@ public class NewPipeSettings {
 
     public static void initSettings(Context context) {
         PreferenceManager.setDefaultValues(context, R.xml.settings, false);
-        //getVideoDownloadFolder(context);
-//        getAudioDownloadFolder(context);
+        getVideoDownloadFolder(context);
+        getAudioDownloadFolder(context);
     }
 
     public static File getVideoDownloadFolder(Context context) {

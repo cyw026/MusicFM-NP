@@ -43,7 +43,7 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
 
         defaultPreferences = PreferenceManager.getDefaultSharedPreferences(activity);
         initKeys();
-//        updatePreferencesSummary();
+        updatePreferencesSummary();
 
         currentTheme = defaultPreferences.getString(THEME, getString(R.string.default_theme_value));
     }

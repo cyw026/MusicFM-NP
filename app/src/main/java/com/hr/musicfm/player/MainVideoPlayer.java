@@ -76,7 +76,8 @@ public class MainVideoPlayer extends Activity {
 
         // adMob
         mInterstitialAd = new InterstitialAd(this);
-        mInterstitialAd.setAdUnitId("ca-app-pub-5814663467390565/9908605575");
+//        mInterstitialAd.setAdUnitId("ca-app-pub-5814663467390565/9908605575");
+        mInterstitialAd.setAdUnitId("ca-app-pub-5814663467390565/4793999365");
         mInterstitialAd.loadAd(new AdRequest.Builder().build());
     }
 
