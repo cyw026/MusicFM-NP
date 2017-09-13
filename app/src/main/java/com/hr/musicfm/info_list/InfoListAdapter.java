@@ -232,9 +232,9 @@ public class InfoListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         Context context = parent.getContext();
         AdView v = new AdView(context);
         v.setAdSize(AdSize.SMART_BANNER);
-        Random rand = new Random();
-        int index = rand.nextInt(3);
-        v.setAdUnitId(ids[index]);
+//        Random rand = new Random();
+//        int index = rand.nextInt(3);
+        v.setAdUnitId(ids[0]);
 
         v.setAdListener(new AdListener() {
             @Override

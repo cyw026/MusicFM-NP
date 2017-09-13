@@ -213,7 +213,7 @@ public class SubscriptionFragment extends BaseFragment {
 
                 animateView(loadingProgressBar, false, 200);
 
-                emptyPanel.setVisibility(subscriptions.isEmpty() ? View.VISIBLE : View.INVISIBLE);
+                emptyPanel.setVisibility(subscriptions.isEmpty() ? View.INVISIBLE : View.INVISIBLE);
 
                 if (viewState != null && resultRecyclerView != null) {
                     resultRecyclerView.getLayoutManager().onRestoreInstanceState(viewState);
@@ -238,6 +238,25 @@ public class SubscriptionFragment extends BaseFragment {
 
     private List<InfoItem> getSubscriptionItems(List<SubscriptionEntity> subscriptions) {
         List<InfoItem> items = new ArrayList<>();
+        if (subscriptions.isEmpty()) {
+//            ChannelInfoItem item = new ChannelInfoItem();
+//            item.webPageUrl = "https://www.youtube.com/channel/UC7ovu6a8ydIbDy0fAKmoZ9A";
+//            item.serviceId = 0;
+//            item.channelName = "相信音樂BinMusic";
+//            item.thumbnailUrl = "https://yt3.ggpht.com/-mPzdsfu8Foo/AAAAAAAAAAI/AAAAAAAAAAA/iU7838SA9bs/s100-c-k-no-mo-rj-c0xffffff/photo.jpg";
+//            item.subscriberCount = 1895451;
+//            item.description = "";
+//            items.add( item );
+
+            ChannelInfoItem item1 = new ChannelInfoItem();
+            item1.webPageUrl = "https://www.youtube.com/channel/UCIzc1_X3OAFquArF3EOVeWw";
+            item1.serviceId = 0;
+            item1.channelName = "daoko_jp";
+            item1.thumbnailUrl = "https://yt3.ggpht.com/-FQJMVROY_us/AAAAAAAAAAI/AAAAAAAAAAA/N3Np-6kC9k4/s100-c-k-no-mo-rj-c0xffffff/photo.jpg";
+            item1.subscriberCount = 215102;
+            item1.description = "";
+            items.add( item1 );
+        }
         for (final SubscriptionEntity subscription: subscriptions) {
             ChannelInfoItem item = new ChannelInfoItem();
             item.webPageUrl = subscription.getUrl();

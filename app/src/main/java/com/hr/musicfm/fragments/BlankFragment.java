@@ -77,6 +77,7 @@ public class BlankFragment extends BaseFragment implements PlayListExtractorWork
     private String feedUrl = "";
     private int pageNumber = 0;
     private boolean hasNextPage = true;
+    private String playlist = "https://www.youtube.com/playlist?list=PLFgquLnL59alxIWnf4ivu5bjPeHSlsUe9";
 
     /*//////////////////////////////////////////////////////////////////////////
     // Views
@@ -87,6 +88,10 @@ public class BlankFragment extends BaseFragment implements PlayListExtractorWork
     /*////////////////////////////////////////////////////////////////////////*/
 
     public BlankFragment() {
+    }
+
+    public BlankFragment(String content) {
+        playlist = content;
     }
 
     public static Fragment getInstance(int serviceId, String channelUrl, String name) {
@@ -104,7 +109,7 @@ public class BlankFragment extends BaseFragment implements PlayListExtractorWork
         if (DEBUG) Log.d(TAG, "onCreate() called with: savedInstanceState = [" + savedInstanceState + "]");
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
-        setChannel(0, "https://www.youtube.com/playlist?list=PLFgquLnL59alxIWnf4ivu5bjPeHSlsUe9", "jp");
+        setChannel(0, playlist, "jp");
     }
 
     @Override
