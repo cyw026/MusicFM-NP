@@ -168,8 +168,14 @@ public class MainActivity extends AppCompatActivity implements
 
 
         if (getSupportFragmentManager().getBackStackEntryCount() == 1) {
-            finish();
+//            finish();
+            Intent intent = new Intent(Intent.ACTION_MAIN);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            intent.addCategory(Intent.CATEGORY_HOME);
+            startActivity(intent);
         } else super.onBackPressed();
+
+
     }
 
     /*//////////////////////////////////////////////////////////////////////////

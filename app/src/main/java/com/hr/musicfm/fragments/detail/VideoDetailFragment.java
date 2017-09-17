@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -26,22 +27,30 @@ import android.text.method.LinkMovementMethod;
 import android.text.util.Linkify;
 import android.util.Log;
 import android.util.TypedValue;
+import android.view.GestureDetector;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.PopupMenu;
 import android.widget.RelativeLayout;
+import android.widget.SeekBar;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.hr.musicfm.App;
+import com.hr.musicfm.player.BasePlayer;
+import com.hr.musicfm.player.VideoPlayer;
 import com.nirhart.parallaxscroll.views.ParallaxScrollView;
 import com.nostra13.universalimageloader.core.assist.FailReason;
 import com.nostra13.universalimageloader.core.listener.SimpleImageLoadingListener;
@@ -70,6 +79,9 @@ import com.hr.musicfm.util.Utils;
 import com.hr.musicfm.R;
 import com.hr.musicfm.workers.StreamExtractorWorker;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Stack;
@@ -77,7 +89,7 @@ import java.util.Stack;
 import static com.hr.musicfm.util.AnimationUtils.animateView;
 
 public class VideoDetailFragment extends BaseFragment implements StreamExtractorWorker.OnStreamInfoReceivedListener, SharedPreferences.OnSharedPreferenceChangeListener, View.OnClickListener {
-    private final String TAG = "VideoDetailFragment@" + Integer.toHexString(hashCode());
+    private static final String TAG = ".VideoDetailFragment";
 
     // Amount of videos to show on start
     private static final int INITIAL_RELATED_VIDEOS = 8;
@@ -157,6 +169,10 @@ public class VideoDetailFragment extends BaseFragment implements StreamExtractor
     private LinearLayout relatedStreamsView;
     private ImageButton relatedStreamExpandButton;
     private OnVideoPlayListener onVideoPlayedListener;
+    private VideoDetailFragment.VideoPlayerImpl playerImpl;
+    private GestureDetector gestureDetector;
+    private boolean activityPaused;
+
 
     /*////////////////////////////////////////////////////////////////////////*/
 
@@ -216,6 +232,8 @@ public class VideoDetailFragment extends BaseFragment implements StreamExtractor
             backgroundHandlerThread = handlerThread;
             backgroundHandler = new Handler(handlerThread.getLooper(), new BackgroundCallback(uiHandler, getContext()));
         }
+
+        playerImpl = new VideoDetailFragment.VideoPlayerImpl();
     }
 
     @Override
@@ -262,6 +280,17 @@ public class VideoDetailFragment extends BaseFragment implements StreamExtractor
         // Check if it was loading when the activity was stopped/paused,
         // because when this happen, the curExtractorWorker is cancelled
         if (wasLoading.getAndSet(false)) selectAndLoadVideo(serviceId, videoUrl, videoTitle);
+
+        if (activityPaused) {
+            if (playerImpl.getPlayer() != null) {
+                playerImpl.play(true);
+            } else {
+                playerImpl.initPlayer();
+                playerImpl.getPlayPauseButton().setImageResource(com.hr.musicfm.R.drawable.ic_play_arrow_white);
+                playerImpl.play(false);
+                activityPaused = false;
+            }
+        }
     }
 
     @Override
@@ -270,6 +299,12 @@ public class VideoDetailFragment extends BaseFragment implements StreamExtractor
         wasLoading.set(curExtractorWorker != null && curExtractorWorker.isRunning());
         if (curExtractorWorker != null && curExtractorWorker.isRunning()) curExtractorWorker.cancel();
         StreamInfoCache.getInstance().removeOldEntries();
+
+        activityPaused = true;
+        if (playerImpl.getPlayer() != null) {
+//            playerImpl.setVideoStartPos((int) playerImpl.getPlayer().getCurrentPosition());
+//            playerImpl.destroyPlayer();
+        }
     }
 
     @Override
@@ -281,6 +316,7 @@ public class VideoDetailFragment extends BaseFragment implements StreamExtractor
         backgroundHandlerThread = null;
         backgroundHandler = null;
         PreferenceManager.getDefaultSharedPreferences(activity).unregisterOnSharedPreferenceChangeListener(this);
+        if (playerImpl != null) playerImpl.destroy();
     }
 
     @Override
@@ -400,6 +436,7 @@ public class VideoDetailFragment extends BaseFragment implements StreamExtractor
                 }
                 break;
             case com.hr.musicfm.R.id.detail_thumbnail_root_layout:
+//            case R.id.detail_thumbnail_play_button:
                 playVideo(currentStreamInfo);
                 break;
             case R.id.detail_title_root_layout:
@@ -531,8 +568,10 @@ public class VideoDetailFragment extends BaseFragment implements StreamExtractor
         parallaxScrollRootView = (ParallaxScrollView) rootView.findViewById(com.hr.musicfm.R.id.detail_main_content);
 
         thumbnailBackgroundButton = rootView.findViewById(R.id.detail_thumbnail_root_layout);
-        thumbnailImageView = (ImageView) rootView.findViewById(R.id.detail_thumbnail_image_view);
-        thumbnailPlayButton = (ImageView) rootView.findViewById(R.id.detail_thumbnail_play_button);
+        thumbnailImageView = (ImageView) rootView.findViewById(R.id.endScreen);
+//        thumbnailPlayButton = (ImageView) rootView.findViewById(R.id.detail_thumbnail_play_button);
+        playerImpl.setup(rootView.findViewById(R.id.detail_thumbnail_root_layout));
+
 
         contentRootLayoutHiding = (LinearLayout) rootView.findViewById(com.hr.musicfm.R.id.detail_content_root_hiding);
 
@@ -590,6 +629,7 @@ public class VideoDetailFragment extends BaseFragment implements StreamExtractor
         detailControlsBackground.setOnClickListener(this);
         detailControlsPopup.setOnClickListener(this);
         relatedStreamExpandButton.setOnClickListener(this);
+//        thumbnailPlayButton.setOnClickListener(this);
     }
 
     private void initThumbnailViews(StreamInfo info) {
@@ -852,7 +892,7 @@ public class VideoDetailFragment extends BaseFragment implements StreamExtractor
         videoTitleToggleArrow.setVisibility(View.GONE);
         videoTitleRoot.setClickable(false);
 
-        AnimationUtils.animateView(thumbnailPlayButton, false, 50);
+//        AnimationUtils.animateView(thumbnailPlayButton, false, 50);
         imageLoader.cancelDisplayTask(thumbnailImageView);
         imageLoader.cancelDisplayTask(uploaderThumb);
         thumbnailImageView.setImageBitmap(null);
@@ -891,7 +931,7 @@ public class VideoDetailFragment extends BaseFragment implements StreamExtractor
         selectVideo(info.service_id, info.webpage_url, info.title);
 
         loadingProgressBar.setVisibility(View.GONE);
-        AnimationUtils.animateView(thumbnailPlayButton, true, 200);
+//        AnimationUtils.animateView(thumbnailPlayButton, true, 200);
 
         // Since newpipe is designed to work even if certain information is not available,
         // the UI has to react on missing information.
@@ -947,7 +987,7 @@ public class VideoDetailFragment extends BaseFragment implements StreamExtractor
         if (autoPlayEnabled) {
             playVideo(info);
             // Only auto play in the first open
-            autoPlayEnabled = false;
+            // autoPlayEnabled = false;
         }
     }
 
@@ -1019,7 +1059,18 @@ public class VideoDetailFragment extends BaseFragment implements StreamExtractor
                     || (Build.VERSION.SDK_INT < 16);
             if (!useOldPlayer) {
                 // ExoPlayer
-                mIntent = NavigationHelper.getOpenVideoPlayerIntent(activity, MainVideoPlayer.class, info, actionBarHandler.getSelectedVideoStream());
+                mIntent = activity.getIntent();
+                mIntent.putExtra(BasePlayer.VIDEO_TITLE, info.title)
+                        .putExtra(BasePlayer.VIDEO_URL, info.webpage_url)
+                        .putExtra(BasePlayer.VIDEO_THUMBNAIL_URL, info.thumbnail_url)
+                        .putExtra(BasePlayer.CHANNEL_NAME, info.uploader)
+                        .putExtra(VideoPlayer.INDEX_SEL_VIDEO_STREAM, actionBarHandler.getSelectedVideoStream())
+                        .putExtra(VideoPlayer.VIDEO_STREAMS_LIST, Utils.getSortedStreamVideosList(activity, info.video_streams, info.video_only_streams, false))
+                        .putExtra(VideoPlayer.VIDEO_ONLY_AUDIO_STREAM, Utils.getHighestQualityAudio(info.audio_streams));
+                if (info.start_position > 0) mIntent.putExtra(BasePlayer.START_POSITION, info.start_position * 1000);
+
+                playerImpl.handleIntent(mIntent);
+//                mIntent = NavigationHelper.getOpenVideoPlayerIntent(activity, MainVideoPlayer.class, info, actionBarHandler.getSelectedVideoStream());
             } else {
                 // Internal Player
                 mIntent = new Intent(activity, PlayVideoActivity.class)
@@ -1027,8 +1078,9 @@ public class VideoDetailFragment extends BaseFragment implements StreamExtractor
                         .putExtra(PlayVideoActivity.STREAM_URL, selectedVideoStream.url)
                         .putExtra(PlayVideoActivity.VIDEO_URL, info.webpage_url)
                         .putExtra(PlayVideoActivity.START_POSITION, info.start_position);
+                startActivity(mIntent);
             }
-            startActivity(mIntent);
+
         }
     }
 
@@ -1051,6 +1103,10 @@ public class VideoDetailFragment extends BaseFragment implements StreamExtractor
         boolean isPortrait = getResources().getDisplayMetrics().heightPixels > getResources().getDisplayMetrics().widthPixels;
         int height = isPortrait ? (int) (getResources().getDisplayMetrics().widthPixels / (16.0f / 9.0f))
                 : (int) (getResources().getDisplayMetrics().heightPixels / 2f);
+
+        playerImpl.getRootView().setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, height));
+//        playerImpl.setMinimumHeight(height);
+
         thumbnailImageView.setScaleType(isPortrait ? ImageView.ScaleType.CENTER_CROP : ImageView.ScaleType.FIT_CENTER);
         thumbnailImageView.setLayoutParams(new FrameLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, height));
         thumbnailImageView.setMinimumHeight(height);
@@ -1268,4 +1324,242 @@ public class VideoDetailFragment extends BaseFragment implements StreamExtractor
          */
         void onBackgroundPlayed(StreamInfo streamInfo, AudioStream audioStream);
     }
+
+    @SuppressWarnings({"unused", "WeakerAccess"})
+    private class VideoPlayerImpl extends VideoPlayer {
+        private TextView titleTextView;
+        private TextView channelTextView;
+        private ImageButton playPauseButton;
+        VideoPlayerImpl() {
+            super("VideoPlayerImpl" + VideoDetailFragment.TAG, App.getInstance());
+        }
+
+        @Override
+        public void initViews(View rootView) {
+            super.initViews(rootView);
+            this.titleTextView = (TextView) rootView.findViewById(R.id.titleTextView);
+            this.channelTextView = (TextView) rootView.findViewById(R.id.channelTextView);
+            this.playPauseButton = (ImageButton) rootView.findViewById(R.id.playPauseButton);
+
+            getRootView().setKeepScreenOn(true);
+        }
+
+        @Override
+        public void initListeners() {
+            super.initListeners();
+
+            VideoDetailFragment.MySimpleOnGestureListener listener = new VideoDetailFragment.MySimpleOnGestureListener();
+            gestureDetector = new GestureDetector(context, listener);
+            gestureDetector.setIsLongpressEnabled(false);
+            playerImpl.getRootView().setOnTouchListener(listener);
+            playPauseButton.setOnClickListener(this);
+        }
+
+        @Override
+        public void handleIntent(Intent intent) {
+            super.handleIntent(intent);
+            titleTextView.setText(getVideoTitle());
+            channelTextView.setText(getChannelName());
+        }
+
+        @Override
+        public void playUrl(String url, String format, boolean autoPlay) {
+            super.playUrl(url, format, autoPlay);
+            playPauseButton.setImageResource(autoPlay ? R.drawable.ic_pause_white : R.drawable.ic_play_arrow_white);
+        }
+
+        @Override
+        public void onFullScreenButtonClicked() {
+            if (DEBUG) Log.d(TAG, "onFullScreenButtonClicked() called");
+            if (playerImpl.getPlayer() == null) return;
+
+            Intent intent;
+            if (!getSharedPreferences().getBoolean(getResources().getString(com.hr.musicfm.R.string.use_old_player_key), false)) {
+                intent = NavigationHelper.getOpenVideoPlayerIntent(context, MainVideoPlayer.class, playerImpl);
+                if (!playerImpl.isStartedFromNewPipe()) intent.putExtra(STARTED_FROM_NEWPIPE, false);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            } else {
+                intent = NavigationHelper.getOpenVideoPlayerIntent(activity, MainVideoPlayer.class, currentStreamInfo, actionBarHandler.getSelectedVideoStream());
+            }
+            context.startActivity(intent);
+//            if (playerImpl != null) playerImpl.destroyPlayer();
+        }
+
+        @Override
+        public void onClick(View v) {
+            super.onClick(v);
+            if (v.getId() == playPauseButton.getId())
+                onVideoPlayPause();
+
+            if (getCurrentState() != STATE_COMPLETED) {
+                getControlsVisibilityHandler().removeCallbacksAndMessages(null);
+                AnimationUtils.animateView(playerImpl.getControlsRoot(), true, 300, 0, new Runnable() {
+                    @Override
+                    public void run() {
+                        if (getCurrentState() == STATE_PLAYING && !playerImpl.isSomePopupMenuVisible()) {
+                            hideControls(300, DEFAULT_CONTROLS_HIDE_TIME);
+                        }
+                    }
+                });
+            }
+        }
+
+        @Override
+        public void onStopTrackingTouch(SeekBar seekBar) {
+            super.onStopTrackingTouch(seekBar);
+            if (playerImpl.wasPlaying()) {
+                hideControls(100, 0);
+            }
+        }
+
+        @Override
+        public void onDismiss(PopupMenu menu) {
+            super.onDismiss(menu);
+            if (isPlaying()) hideControls(300, 0);
+        }
+
+        @Override
+        public void onError(Exception exception) {
+            exception.printStackTrace();
+            Toast.makeText(context, "Failed to play this video", Toast.LENGTH_SHORT).show();
+        }
+
+        /*//////////////////////////////////////////////////////////////////////////
+        // States
+        //////////////////////////////////////////////////////////////////////////*/
+
+        @Override
+        public void onLoading() {
+            super.onLoading();
+            playPauseButton.setImageResource(R.drawable.ic_pause_white);
+            AnimationUtils.animateView(playPauseButton, AnimationUtils.Type.SCALE_AND_ALPHA, false, 100);
+            getRootView().setKeepScreenOn(true);
+        }
+
+        @Override
+        public void onBuffering() {
+            super.onBuffering();
+            AnimationUtils.animateView(playPauseButton, AnimationUtils.Type.SCALE_AND_ALPHA, false, 100);
+            getRootView().setKeepScreenOn(true);
+        }
+
+        @Override
+        public void onPlaying() {
+            super.onPlaying();
+            AnimationUtils.animateView(playPauseButton, AnimationUtils.Type.SCALE_AND_ALPHA, false, 80, 0, new Runnable() {
+                @Override
+                public void run() {
+                    playPauseButton.setImageResource(R.drawable.ic_pause_white);
+                    AnimationUtils.animateView(playPauseButton, AnimationUtils.Type.SCALE_AND_ALPHA, true, 200);
+                }
+            });
+            getRootView().setKeepScreenOn(true);
+        }
+
+        @Override
+        public void onPaused() {
+            super.onPaused();
+            AnimationUtils.animateView(playPauseButton, AnimationUtils.Type.SCALE_AND_ALPHA, false, 80, 0, new Runnable() {
+                @Override
+                public void run() {
+                    playPauseButton.setImageResource(R.drawable.ic_play_arrow_white);
+                    AnimationUtils.animateView(playPauseButton, AnimationUtils.Type.SCALE_AND_ALPHA, true, 200);
+                }
+            });
+
+            getRootView().setKeepScreenOn(false);
+        }
+
+        @Override
+        public void onPausedSeek() {
+            super.onPausedSeek();
+            AnimationUtils.animateView(playPauseButton, AnimationUtils.Type.SCALE_AND_ALPHA, false, 100);
+            getRootView().setKeepScreenOn(true);
+        }
+
+
+        @Override
+        public void onCompleted() {
+            if (getCurrentRepeatMode() == RepeatMode.REPEAT_ONE) {
+                playPauseButton.setImageResource(R.drawable.ic_pause_white);
+            } else {
+                AnimationUtils.animateView(playPauseButton, AnimationUtils.Type.SCALE_AND_ALPHA, false, 0, 0, new Runnable() {
+                    @Override
+                    public void run() {
+                        playPauseButton.setImageResource(com.hr.musicfm.R.drawable.ic_replay_white);
+                        AnimationUtils.animateView(playPauseButton, AnimationUtils.Type.SCALE_AND_ALPHA, true, 300);
+                    }
+                });
+            }
+            getRootView().setKeepScreenOn(false);
+            super.onCompleted();
+        }
+
+        /*//////////////////////////////////////////////////////////////////////////
+        // Utils
+        //////////////////////////////////////////////////////////////////////////*/
+
+        @Override
+        public void hideControls(final long duration, long delay) {
+            if (DEBUG) Log.d(TAG, "hideControls() called with: delay = [" + delay + "]");
+            getControlsVisibilityHandler().removeCallbacksAndMessages(null);
+            getControlsVisibilityHandler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    AnimationUtils.animateView(getControlsRoot(), false, duration, 0, new Runnable() {
+                        @Override
+                        public void run() {
+//                            hideSystemUi();
+                        }
+                    });
+                }
+            }, delay);
+        }
+
+        ///////////////////////////////////////////////////////////////////////////
+        // Getters
+        ///////////////////////////////////////////////////////////////////////////
+
+        public TextView getTitleTextView() {
+            return titleTextView;
+        }
+
+        public TextView getChannelTextView() {
+            return channelTextView;
+        }
+
+        public ImageButton getPlayPauseButton() {
+            return playPauseButton;
+        }
+
+        @Override
+        public void onRepeatModeChanged(int i) {
+
+        }
+    }
+
+    private class MySimpleOnGestureListener extends GestureDetector.SimpleOnGestureListener implements View.OnTouchListener {
+        @Override
+        public boolean onSingleTapConfirmed(MotionEvent e) {
+            if (DEBUG) Log.d(TAG, "onSingleTapConfirmed() called with: e = [" + e + "]");
+            if (playerImpl.getCurrentState() != BasePlayer.STATE_PLAYING) return true;
+
+            if (playerImpl.isControlsVisible())
+                playerImpl.hideControls(150, 0);
+            else {
+                playerImpl.showControlsThenHide();
+            }
+            return true;
+        }
+        @Override
+        public boolean onTouch(View v, MotionEvent event) {
+            //noinspection PointlessBooleanExpression
+            if (DEBUG && false) Log.d(TAG, "onTouch() called with: v = [" + v + "], event = [" + event + "]");
+
+            gestureDetector.onTouchEvent(event);
+
+            return true;
+        }
+    }
+
 }
