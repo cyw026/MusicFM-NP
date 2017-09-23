@@ -122,7 +122,8 @@ public class BlankFragment extends BaseFragment implements PlayListExtractorWork
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        currentPlaylistInfo = null;
+        if (currentPlaylistInfo == null) loadPage(0);
+        else handlePlaylistInfo(currentPlaylistInfo);
     }
 
     @Override
@@ -156,12 +157,12 @@ public class BlankFragment extends BaseFragment implements PlayListExtractorWork
     public void onSaveInstanceState(Bundle outState) {
         if (DEBUG) Log.d(TAG, "onSaveInstanceState() called with: outState = [" + outState + "]");
         super.onSaveInstanceState(outState);
-        outState.putString(Constants.KEY_URL, playlistUrl);
-        outState.putString(Constants.KEY_TITLE, playlistName);
-        outState.putInt(Constants.KEY_SERVICE_ID, serviceId);
+//        outState.putString(Constants.KEY_URL, playlistUrl);
+//        outState.putString(Constants.KEY_TITLE, playlistName);
+//        outState.putInt(Constants.KEY_SERVICE_ID, serviceId);
 
-        outState.putSerializable(INFO_LIST_KEY, infoListAdapter.getItemsList());
-        outState.putInt(PAGE_NUMBER_KEY, pageNumber);
+//        outState.putSerializable(INFO_LIST_KEY, infoListAdapter.getItemsList());
+//        outState.putInt(PAGE_NUMBER_KEY, pageNumber);
     }
 
     /*//////////////////////////////////////////////////////////////////////////
@@ -189,8 +190,6 @@ public class BlankFragment extends BaseFragment implements PlayListExtractorWork
         }
 
         resultRecyclerView.setAdapter(infoListAdapter);
-
-        loadPage(0);
     }
 
     @Override

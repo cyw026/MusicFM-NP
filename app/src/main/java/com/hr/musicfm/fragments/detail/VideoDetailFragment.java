@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Build;
@@ -48,6 +49,9 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.ads.AdListener;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.InterstitialAd;
 import com.hr.musicfm.App;
 import com.hr.musicfm.player.BasePlayer;
 import com.hr.musicfm.player.VideoPlayer;
@@ -78,6 +82,26 @@ import com.hr.musicfm.util.Utils;
 
 import com.hr.musicfm.R;
 import com.hr.musicfm.workers.StreamExtractorWorker;
+import com.shuyu.gsyvideoplayer.GSYVideoManager;
+import com.shuyu.gsyvideoplayer.listener.LockClickListener;
+import com.shuyu.gsyvideoplayer.utils.OrientationUtils;
+import com.shuyu.gsyvideoplayer.video.ListGSYVideoPlayer;
+import com.shuyu.gsyvideoplayer.GSYBaseActivityDetail;
+import com.shuyu.gsyvideoplayer.GSYVideoManager;
+import com.shuyu.gsyvideoplayer.builder.GSYVideoOptionBuilder;
+import com.shuyu.gsyvideoplayer.video.base.GSYBaseVideoPlayer;
+import com.shuyu.gsyvideoplayer.video.base.GSYVideoPlayer;
+import com.shuyu.gsyvideoplayer.listener.LockClickListener;
+import com.shuyu.gsyvideoplayer.model.GSYVideoModel;
+import com.shuyu.gsyvideoplayer.video.ListGSYVideoPlayer;
+import com.shuyu.gsyvideoplayer.listener.StandardVideoAllCallBack;
+import com.shuyu.gsyvideoplayer.video.base.GSYVideoPlayer;
+import com.shuyu.gsyvideoplayer.listener.LockClickListener;
+import com.shuyu.gsyvideoplayer.model.GSYVideoModel;
+import com.shuyu.gsyvideoplayer.utils.OrientationUtils;
+import com.shuyu.gsyvideoplayer.video.ListGSYVideoPlayer;
+import com.shuyu.gsyvideoplayer.video.StandardGSYVideoPlayer;
+
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -85,6 +109,7 @@ import butterknife.ButterKnife;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Stack;
+import java.util.List;
 
 import static com.hr.musicfm.util.AnimationUtils.animateView;
 
@@ -169,9 +194,20 @@ public class VideoDetailFragment extends BaseFragment implements StreamExtractor
     private LinearLayout relatedStreamsView;
     private ImageButton relatedStreamExpandButton;
     private OnVideoPlayListener onVideoPlayedListener;
-    private VideoDetailFragment.VideoPlayerImpl playerImpl;
-    private GestureDetector gestureDetector;
+
     private boolean activityPaused;
+
+    @BindView(R.id.detail_player)
+    ListGSYVideoPlayer detailPlayer;
+
+    protected boolean isPlay;
+
+    protected boolean isPause;
+
+    protected OrientationUtils orientationUtils;
+
+    //ad
+    private InterstitialAd mInterstitialAd;
 
 
     /*////////////////////////////////////////////////////////////////////////*/
@@ -197,6 +233,8 @@ public class VideoDetailFragment extends BaseFragment implements StreamExtractor
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // retain this fragment
+        setRetainInstance(true);
         if (DEBUG) Log.d(TAG, "onCreate() called with: savedInstanceState = [" + savedInstanceState + "]");
 
         if (savedInstanceState != null) {
@@ -233,13 +271,57 @@ public class VideoDetailFragment extends BaseFragment implements StreamExtractor
             backgroundHandler = new Handler(handlerThread.getLooper(), new BackgroundCallback(uiHandler, getContext()));
         }
 
-        playerImpl = new VideoDetailFragment.VideoPlayerImpl();
+        // adMob
+        mInterstitialAd = new InterstitialAd(activity);
+        mInterstitialAd.setAdUnitId("ca-app-pub-5814663467390565/4043146164");
+        // MainVideoPlayer ad
+//        mInterstitialAd.setAdUnitId("ca-app-pub-5814663467390565/9908605575");
+        //test
+//        mInterstitialAd.setAdUnitId("ca-app-pub-3940256099942544/1033173712");
+        mInterstitialAd.loadAd(new AdRequest.Builder().build());
+        mInterstitialAd.setAdListener(new AdListener() {
+            @Override
+            public void onAdLoaded() {
+                // Code to be executed when an ad finishes loading.
+                Log.i("Ads", "onAdLoaded");
+            }
+
+            @Override
+            public void onAdFailedToLoad(int errorCode) {
+                // Code to be executed when an ad request fails.
+                Log.i("Ads", "onAdFailedToLoad");
+            }
+
+            @Override
+            public void onAdOpened() {
+                // Code to be executed when the ad is displayed.
+                Log.i("Ads", "onAdOpened");
+            }
+
+            @Override
+            public void onAdLeftApplication() {
+                // Code to be executed when the user has left the app.
+                Log.i("Ads", "onAdLeftApplication");
+            }
+
+            @Override
+            public void onAdClosed() {
+                // Code to be executed when when the interstitial ad is closed.
+                Log.i("Ads", "onAdClosed");
+                // Load the next interstitial.
+                mInterstitialAd.loadAd(new AdRequest.Builder().build());
+            }
+        });
+
+//        playerImpl = new VideoDetailFragment.VideoPlayerImpl();
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         if (DEBUG) Log.d(TAG, "onCreateView() called with: inflater = [" + inflater + "], container = [" + container + "], savedInstanceState = [" + savedInstanceState + "]");
-        return inflater.inflate(R.layout.fragment_video_detail, container, false);
+        View view = inflater.inflate(R.layout.fragment_video_detail, container, false);
+        ButterKnife.bind(this, view);
+        return view;
     }
 
     @Override
@@ -247,6 +329,98 @@ public class VideoDetailFragment extends BaseFragment implements StreamExtractor
         super.onViewCreated(rootView, savedInstanceState);
         if (currentStreamInfo == null) selectAndLoadVideo(serviceId, videoUrl, videoTitle);
         else prepareAndLoad(currentStreamInfo, false);
+
+        //String url = "http://baobab.wd jcdn.com/14564977406580.mp4";
+//        List<GSYVideoModel> urls = new ArrayList<>();
+//        urls.add(new GSYVideoModel("http://baobab.wdjcdn.com/14564977406580.mp4", "标题1"));
+//        urls.add(new GSYVideoModel("http://9890.vod.myqcloud.com/9890_4e292f9a3dd011e6b4078980237cc3d3.f20.mp4", "标题2"));
+//        urls.add(new GSYVideoModel("http://baobab.wdjcdn.com/14564977406580.mp4", "标题3"));
+//        urls.add(new GSYVideoModel("http://9890.vod.myqcloud.com/9890_4e292f9a3dd011e6b4078980237cc3d3.f20.mp4", "标题4"));
+        GSYVideoManager.instance().setVideoType(activity, 1);
+//        detailPlayer.setUp(urls, true, 0);
+
+        //增加封面
+        ImageView imageView = new ImageView(activity);
+        imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+        imageView.setImageResource(com.hr.musicfm.R.drawable.dummy_thumbnail_dark);
+        detailPlayer.setThumbImageView(imageView);
+
+        resolveNormalVideoUI();
+
+        //外部辅助的旋转，帮助全屏
+        orientationUtils = new OrientationUtils(activity, detailPlayer);
+        //初始化不打开外部的旋转
+        orientationUtils.setEnable(false);
+
+        detailPlayer.setIsTouchWiget(true);
+        //关闭自动旋转
+        detailPlayer.setRotateViewAuto(false);
+        detailPlayer.setLockLand(false);
+        detailPlayer.setShowFullAnimation(false);
+        detailPlayer.setNeedLockFull(true);
+
+        detailPlayer.getFullscreenButton().setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //直接横屏
+                orientationUtils.resolveByClick();
+
+                //第一个true是否需要隐藏actionbar，第二个true是否需要隐藏statusbar
+                detailPlayer.startWindowFullscreen(activity, true, true);
+            }
+        });
+
+        detailPlayer.setStandardVideoAllCallBack(new SampleListener() {
+            @Override
+            public void onPrepared(String url, Object... objects) {
+                super.onPrepared(url, objects);
+                //开始播放了才能旋转和全屏
+                orientationUtils.setEnable(true);
+                isPlay = true;
+            }
+
+            @Override
+            public void onAutoComplete(String url, Object... objects) {
+                super.onAutoComplete(url, objects);
+            }
+
+            @Override
+            public void onClickStartError(String url, Object... objects) {
+                super.onClickStartError(url, objects);
+            }
+
+            @Override
+            public void onQuitFullscreen(String url, Object... objects) {
+                super.onQuitFullscreen(url, objects);
+                if (orientationUtils != null) {
+                    orientationUtils.backToProtVideo();
+                }
+                if (mInterstitialAd.isLoaded()) {
+                    mInterstitialAd.show();
+                } else {
+                    Log.d("TAG", "The interstitial wasn't loaded yet.");
+                }
+            }
+
+            @Override
+            public void onEnterFullscreen(String url, Object... objects) {
+                super.onEnterFullscreen(url, objects);
+                //隐藏调全屏对象的返回按键
+                GSYVideoPlayer gsyVideoPlayer = (GSYVideoPlayer)objects[1];
+                gsyVideoPlayer.getBackButton().setVisibility(View.GONE);
+                gsyVideoPlayer.getTitleTextView().setVisibility(View.GONE);
+            }
+        });
+
+        detailPlayer.setLockClickListener(new LockClickListener() {
+            @Override
+            public void onClick(View view, boolean lock) {
+                if (orientationUtils != null) {
+                    //配合下方的onConfigurationChanged
+                    orientationUtils.setEnable(!lock);
+                }
+            }
+        });
     }
 
     @Override
@@ -281,16 +455,18 @@ public class VideoDetailFragment extends BaseFragment implements StreamExtractor
         // because when this happen, the curExtractorWorker is cancelled
         if (wasLoading.getAndSet(false)) selectAndLoadVideo(serviceId, videoUrl, videoTitle);
 
-        if (activityPaused) {
-            if (playerImpl.getPlayer() != null) {
-                playerImpl.play(true);
-            } else {
-                playerImpl.initPlayer();
-                playerImpl.getPlayPauseButton().setImageResource(com.hr.musicfm.R.drawable.ic_play_arrow_white);
-                playerImpl.play(false);
-                activityPaused = false;
-            }
-        }
+//        if (activityPaused) {
+//            if (playerImpl.getPlayer() != null) {
+//                playerImpl.play(true);
+//            } else {
+//                playerImpl.initPlayer();
+//                playerImpl.getPlayPauseButton().setImageResource(com.hr.musicfm.R.drawable.ic_play_arrow_white);
+//                playerImpl.play(false);
+//                activityPaused = false;
+//            }
+//        }
+        detailPlayer.onVideoResume();
+        isPause = false;
     }
 
     @Override
@@ -301,10 +477,12 @@ public class VideoDetailFragment extends BaseFragment implements StreamExtractor
         StreamInfoCache.getInstance().removeOldEntries();
 
         activityPaused = true;
-        if (playerImpl.getPlayer() != null) {
+        detailPlayer.onVideoPause();
+        isPause = true;
+//        if (playerImpl.getPlayer() != null) {
 //            playerImpl.setVideoStartPos((int) playerImpl.getPlayer().getCurrentPosition());
 //            playerImpl.destroyPlayer();
-        }
+//        }
     }
 
     @Override
@@ -316,13 +494,16 @@ public class VideoDetailFragment extends BaseFragment implements StreamExtractor
         backgroundHandlerThread = null;
         backgroundHandler = null;
         PreferenceManager.getDefaultSharedPreferences(activity).unregisterOnSharedPreferenceChangeListener(this);
-        if (playerImpl != null) playerImpl.destroy();
+//        if (playerImpl != null) playerImpl.destroy();
+        GSYVideoPlayer.releaseAllVideos();
+        if (orientationUtils != null)
+            orientationUtils.releaseListener();
     }
 
     @Override
     public void onDestroyView() {
         if (DEBUG) Log.d(TAG, "onDestroyView() called");
-        thumbnailImageView.setImageBitmap(null);
+//        thumbnailImageView.setImageBitmap(null);
         relatedStreamsView.removeAllViews();
         spinnerToolbar.setOnItemSelectedListener(null);
 
@@ -435,10 +616,10 @@ public class VideoDetailFragment extends BaseFragment implements StreamExtractor
                     NavigationHelper.openChannelFragment(getFragmentManager(), currentStreamInfo.service_id, currentStreamInfo.channel_url, currentStreamInfo.uploader);
                 }
                 break;
-            case com.hr.musicfm.R.id.detail_thumbnail_root_layout:
+//            case com.hr.musicfm.R.id.detail_thumbnail_root_layout:
 //            case R.id.detail_thumbnail_play_button:
-                playVideo(currentStreamInfo);
-                break;
+//                playVideo(currentStreamInfo);
+//                break;
             case R.id.detail_title_root_layout:
                 toggleTitleAndDescription();
                 break;
@@ -568,9 +749,9 @@ public class VideoDetailFragment extends BaseFragment implements StreamExtractor
         parallaxScrollRootView = (ParallaxScrollView) rootView.findViewById(com.hr.musicfm.R.id.detail_main_content);
 
         thumbnailBackgroundButton = rootView.findViewById(R.id.detail_thumbnail_root_layout);
-        thumbnailImageView = (ImageView) rootView.findViewById(R.id.endScreen);
+//        thumbnailImageView = (ImageView) rootView.findViewById(R.id.endScreen);
 //        thumbnailPlayButton = (ImageView) rootView.findViewById(R.id.detail_thumbnail_play_button);
-        playerImpl.setup(rootView.findViewById(R.id.detail_thumbnail_root_layout));
+//        playerImpl.setup(rootView.findViewById(R.id.detail_thumbnail_root_layout));
 
 
         contentRootLayoutHiding = (LinearLayout) rootView.findViewById(com.hr.musicfm.R.id.detail_content_root_hiding);
@@ -633,14 +814,22 @@ public class VideoDetailFragment extends BaseFragment implements StreamExtractor
     }
 
     private void initThumbnailViews(StreamInfo info) {
+        ImageView thumbImageView = (ImageView) detailPlayer.getThumbImageView();
+        if (thumbImageView == null) {
+            thumbImageView = new ImageView(activity);
+            thumbImageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+            thumbImageView.setImageResource(com.hr.musicfm.R.drawable.dummy_thumbnail_dark);
+            detailPlayer.setThumbImageView(thumbImageView);
+        }
         if (info.thumbnail_url != null && !info.thumbnail_url.isEmpty()) {
-            imageLoader.displayImage(info.thumbnail_url, thumbnailImageView, displayImageOptions, new SimpleImageLoadingListener() {
+            imageLoader.displayImage(info.thumbnail_url, thumbImageView, displayImageOptions, new SimpleImageLoadingListener() {
                 @Override
                 public void onLoadingFailed(String imageUri, View view, FailReason failReason) {
                     ErrorActivity.reportError(activity, failReason.getCause(), null, activity.findViewById(android.R.id.content), ErrorActivity.ErrorInfo.make(UserAction.LOAD_IMAGE, NewPipe.getNameOfService(currentStreamInfo.service_id), imageUri, com.hr.musicfm.R.string.could_not_load_thumbnails));
                 }
             });
-        } else thumbnailImageView.setImageResource(com.hr.musicfm.R.drawable.dummy_thumbnail_dark);
+        }
+//        } else thumbnailImageView.setImageResource(com.hr.musicfm.R.drawable.dummy_thumbnail_dark);
 
         if (info.uploader_thumbnail_url != null && !info.uploader_thumbnail_url.isEmpty()) {
             imageLoader.displayImage(info.uploader_thumbnail_url, uploaderThumb, displayImageOptions,
@@ -679,6 +868,31 @@ public class VideoDetailFragment extends BaseFragment implements StreamExtractor
         }
     }
 
+    private void initPlayList(StreamInfo info) {
+
+
+
+        List<GSYVideoModel> urls = new ArrayList<>();
+        urls.add(new GSYVideoModel(getSelectedVideoStream().url, info.title));
+
+
+//        if (info.related_streams != null && !info.related_streams.isEmpty() && showRelatedStreams) {
+//            //long first = System.nanoTime(), each;
+//            int to = info.related_streams.size() >= INITIAL_RELATED_VIDEOS ? INITIAL_RELATED_VIDEOS : info.related_streams.size();
+//            for (int i = 0; i < to; i++) {
+//                InfoItem item = info.related_streams.get(i);
+//
+//                urls.add(new GSYVideoModel(getSelectedVideoStream().url, info.title));
+//            }
+//        }
+
+        if (detailPlayer != null) {
+            detailPlayer.setUp(urls, true, 0);
+            if (autoPlayEnabled) {
+                detailPlayer.startPlayLogic();
+            }
+        }
+    }
     /*//////////////////////////////////////////////////////////////////////////
     // Menu
     //////////////////////////////////////////////////////////////////////////*/
@@ -799,6 +1013,14 @@ public class VideoDetailFragment extends BaseFragment implements StreamExtractor
 
     public boolean onActivityBackPressed() {
         if (DEBUG) Log.d(TAG, "onActivityBackPressed() called");
+
+        if (orientationUtils != null) {
+            orientationUtils.backToProtVideo();
+        }
+        if (StandardGSYVideoPlayer.backFromWindowFull(activity)) {
+            return true;
+        }
+
         // That means that we are on the start of the stack,
         // return false to let the MainActivity handle the onBack
         if (stack.size() == 1) return false;
@@ -818,6 +1040,7 @@ public class VideoDetailFragment extends BaseFragment implements StreamExtractor
         } else {
             selectAndLoadVideo(0, peek.getUrl(), !TextUtils.isEmpty(peek.getTitle()) ? peek.getTitle() : "");
         }
+
         return true;
     }
 
@@ -893,9 +1116,9 @@ public class VideoDetailFragment extends BaseFragment implements StreamExtractor
         videoTitleRoot.setClickable(false);
 
 //        AnimationUtils.animateView(thumbnailPlayButton, false, 50);
-        imageLoader.cancelDisplayTask(thumbnailImageView);
+//        imageLoader.cancelDisplayTask(thumbnailImageView);
         imageLoader.cancelDisplayTask(uploaderThumb);
-        thumbnailImageView.setImageBitmap(null);
+//        thumbnailImageView.setImageBitmap(null);
         uploaderThumb.setImageBitmap(null);
 
         if (info != null) {
@@ -922,6 +1145,12 @@ public class VideoDetailFragment extends BaseFragment implements StreamExtractor
             curExtractorWorker.start();
             AnimationUtils.animateView(loadingProgressBar, true, 200);
             AnimationUtils.animateView(contentRootLayoutHiding, false, 200);
+        }
+
+        if (mInterstitialAd.isLoaded()) {
+            mInterstitialAd.show();
+        } else {
+            Log.d("TAG", "The interstitial wasn't loaded yet.");
         }
     }
 
@@ -974,6 +1203,7 @@ public class VideoDetailFragment extends BaseFragment implements StreamExtractor
         setupActionBarHandler(info);
         initThumbnailViews(info);
         initRelatedVideos(info);
+        initPlayList(info);
         if (wasRelatedStreamsExpanded) {
             toggleExpandRelatedVideos(currentStreamInfo);
             wasRelatedStreamsExpanded = false;
@@ -983,12 +1213,6 @@ public class VideoDetailFragment extends BaseFragment implements StreamExtractor
 
         prepareDescription(info.description);
         prepareUploadDate(info.upload_date);
-
-        if (autoPlayEnabled) {
-            playVideo(info);
-            // Only auto play in the first open
-            // autoPlayEnabled = false;
-        }
     }
 
     private void prepareUploadDate(final String uploadDate) {
@@ -1069,7 +1293,7 @@ public class VideoDetailFragment extends BaseFragment implements StreamExtractor
                         .putExtra(VideoPlayer.VIDEO_ONLY_AUDIO_STREAM, Utils.getHighestQualityAudio(info.audio_streams));
                 if (info.start_position > 0) mIntent.putExtra(BasePlayer.START_POSITION, info.start_position * 1000);
 
-                playerImpl.handleIntent(mIntent);
+//                playerImpl.handleIntent(mIntent);
 //                mIntent = NavigationHelper.getOpenVideoPlayerIntent(activity, MainVideoPlayer.class, info, actionBarHandler.getSelectedVideoStream());
             } else {
                 // Internal Player
@@ -1104,12 +1328,12 @@ public class VideoDetailFragment extends BaseFragment implements StreamExtractor
         int height = isPortrait ? (int) (getResources().getDisplayMetrics().widthPixels / (16.0f / 9.0f))
                 : (int) (getResources().getDisplayMetrics().heightPixels / 2f);
 
-        playerImpl.getRootView().setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, height));
+        thumbnailBackgroundButton.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, height));
 //        playerImpl.setMinimumHeight(height);
 
-        thumbnailImageView.setScaleType(isPortrait ? ImageView.ScaleType.CENTER_CROP : ImageView.ScaleType.FIT_CENTER);
-        thumbnailImageView.setLayoutParams(new FrameLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, height));
-        thumbnailImageView.setMinimumHeight(height);
+//        thumbnailImageView.setScaleType(isPortrait ? ImageView.ScaleType.CENTER_CROP : ImageView.ScaleType.FIT_CENTER);
+//        thumbnailImageView.setLayoutParams(new FrameLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, height));
+//        thumbnailImageView.setMinimumHeight(height);
     }
 
     public String getShortCount(Long viewCount) {
@@ -1153,14 +1377,14 @@ public class VideoDetailFragment extends BaseFragment implements StreamExtractor
     }
 
     private void setErrorImage(final int imageResource) {
-        if (thumbnailImageView == null || activity == null) return;
-        thumbnailImageView.setImageDrawable(ContextCompat.getDrawable(activity, imageResource));
-        AnimationUtils.animateView(thumbnailImageView, false, 0, 0, new Runnable() {
-            @Override
-            public void run() {
-                AnimationUtils.animateView(thumbnailImageView, true, 500);
-            }
-        });
+//        if (thumbnailImageView == null || activity == null) return;
+//        thumbnailImageView.setImageDrawable(ContextCompat.getDrawable(activity, imageResource));
+//        AnimationUtils.animateView(thumbnailImageView, false, 0, 0, new Runnable() {
+//            @Override
+//            public void run() {
+//                AnimationUtils.animateView(thumbnailImageView, true, 500);
+//            }
+//        });
     }
 
     @Override
@@ -1325,241 +1549,154 @@ public class VideoDetailFragment extends BaseFragment implements StreamExtractor
         void onBackgroundPlayed(StreamInfo streamInfo, AudioStream audioStream);
     }
 
-    @SuppressWarnings({"unused", "WeakerAccess"})
-    private class VideoPlayerImpl extends VideoPlayer {
-        private TextView titleTextView;
-        private TextView channelTextView;
-        private ImageButton playPauseButton;
-        VideoPlayerImpl() {
-            super("VideoPlayerImpl" + VideoDetailFragment.TAG, App.getInstance());
-        }
+    public class SampleListener implements StandardVideoAllCallBack {
 
+        //加载成功，objects[0]是title，object[1]是当前所处播放器（全屏或非全屏）
         @Override
-        public void initViews(View rootView) {
-            super.initViews(rootView);
-            this.titleTextView = (TextView) rootView.findViewById(R.id.titleTextView);
-            this.channelTextView = (TextView) rootView.findViewById(R.id.channelTextView);
-            this.playPauseButton = (ImageButton) rootView.findViewById(R.id.playPauseButton);
+        public void onPrepared(String url, Object... objects) {
 
-            getRootView().setKeepScreenOn(true);
         }
 
+        //点击了开始按键播放，objects[0]是title，object[1]是当前所处播放器（全屏或非全屏）
         @Override
-        public void initListeners() {
-            super.initListeners();
+        public void onClickStartIcon(String url, Object... objects) {
 
-            VideoDetailFragment.MySimpleOnGestureListener listener = new VideoDetailFragment.MySimpleOnGestureListener();
-            gestureDetector = new GestureDetector(context, listener);
-            gestureDetector.setIsLongpressEnabled(false);
-            playerImpl.getRootView().setOnTouchListener(listener);
-            playPauseButton.setOnClickListener(this);
         }
 
+        //点击了错误状态下的开始按键，objects[0]是title，object[1]是当前所处播放器（全屏或非全屏）
         @Override
-        public void handleIntent(Intent intent) {
-            super.handleIntent(intent);
-            titleTextView.setText(getVideoTitle());
-            channelTextView.setText(getChannelName());
+        public void onClickStartError(String url, Object... objects) {
+
         }
 
+        //点击了播放状态下的开始按键--->停止，objects[0]是title，object[1]是当前所处播放器（全屏或非全屏）
         @Override
-        public void playUrl(String url, String format, boolean autoPlay) {
-            super.playUrl(url, format, autoPlay);
-            playPauseButton.setImageResource(autoPlay ? R.drawable.ic_pause_white : R.drawable.ic_play_arrow_white);
+        public void onClickStop(String url, Object... objects) {
+
         }
 
+        //点击了全屏播放状态下的开始按键--->停止，objects[0]是title，object[1]是当前所处播放器（全屏或非全屏）
         @Override
-        public void onFullScreenButtonClicked() {
-            if (DEBUG) Log.d(TAG, "onFullScreenButtonClicked() called");
-            if (playerImpl.getPlayer() == null) return;
+        public void onClickStopFullscreen(String url, Object... objects) {
 
-            Intent intent;
-            if (!getSharedPreferences().getBoolean(getResources().getString(com.hr.musicfm.R.string.use_old_player_key), false)) {
-                intent = NavigationHelper.getOpenVideoPlayerIntent(context, MainVideoPlayer.class, playerImpl);
-                if (!playerImpl.isStartedFromNewPipe()) intent.putExtra(STARTED_FROM_NEWPIPE, false);
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            } else {
-                intent = NavigationHelper.getOpenVideoPlayerIntent(activity, MainVideoPlayer.class, currentStreamInfo, actionBarHandler.getSelectedVideoStream());
-            }
-            context.startActivity(intent);
-//            if (playerImpl != null) playerImpl.destroyPlayer();
         }
 
+        //点击了暂停状态下的开始按键--->播放，objects[0]是title，object[1]是当前所处播放器（全屏或非全屏）
         @Override
-        public void onClick(View v) {
-            super.onClick(v);
-            if (v.getId() == playPauseButton.getId())
-                onVideoPlayPause();
+        public void onClickResume(String url, Object... objects) {
 
-            if (getCurrentState() != STATE_COMPLETED) {
-                getControlsVisibilityHandler().removeCallbacksAndMessages(null);
-                AnimationUtils.animateView(playerImpl.getControlsRoot(), true, 300, 0, new Runnable() {
-                    @Override
-                    public void run() {
-                        if (getCurrentState() == STATE_PLAYING && !playerImpl.isSomePopupMenuVisible()) {
-                            hideControls(300, DEFAULT_CONTROLS_HIDE_TIME);
-                        }
-                    }
-                });
-            }
         }
 
+        //点击了全屏暂停状态下的开始按键--->播放，objects[0]是title，object[1]是当前所处播放器（全屏或非全屏）
         @Override
-        public void onStopTrackingTouch(SeekBar seekBar) {
-            super.onStopTrackingTouch(seekBar);
-            if (playerImpl.wasPlaying()) {
-                hideControls(100, 0);
-            }
+        public void onClickResumeFullscreen(String url, Object... objects) {
+
         }
 
+        //点击了空白弹出seekbar，objects[0]是title，object[1]是当前所处播放器（全屏或非全屏）
         @Override
-        public void onDismiss(PopupMenu menu) {
-            super.onDismiss(menu);
-            if (isPlaying()) hideControls(300, 0);
+        public void onClickSeekbar(String url, Object... objects) {
+
         }
 
+        //点击了全屏的seekbar，objects[0]是title，object[1]是当前所处播放器（全屏或非全屏）
         @Override
-        public void onError(Exception exception) {
-            exception.printStackTrace();
-            Toast.makeText(context, "Failed to play this video", Toast.LENGTH_SHORT).show();
+        public void onClickSeekbarFullscreen(String url, Object... objects) {
+
         }
 
-        /*//////////////////////////////////////////////////////////////////////////
-        // States
-        //////////////////////////////////////////////////////////////////////////*/
-
+        //播放完了，objects[0]是title，object[1]是当前所处播放器（全屏或非全屏）
         @Override
-        public void onLoading() {
-            super.onLoading();
-            playPauseButton.setImageResource(R.drawable.ic_pause_white);
-            AnimationUtils.animateView(playPauseButton, AnimationUtils.Type.SCALE_AND_ALPHA, false, 100);
-            getRootView().setKeepScreenOn(true);
+        public void onAutoComplete(String url, Object... objects) {
+
         }
 
+        //进去全屏，objects[0]是title，object[1]是当前所处播放器（全屏或非全屏）
         @Override
-        public void onBuffering() {
-            super.onBuffering();
-            AnimationUtils.animateView(playPauseButton, AnimationUtils.Type.SCALE_AND_ALPHA, false, 100);
-            getRootView().setKeepScreenOn(true);
+        public void onEnterFullscreen(String url, Object... objects) {
+
         }
 
+        //退出全屏，objects[0]是title，object[1]是当前所处播放器（全屏或非全屏）
         @Override
-        public void onPlaying() {
-            super.onPlaying();
-            AnimationUtils.animateView(playPauseButton, AnimationUtils.Type.SCALE_AND_ALPHA, false, 80, 0, new Runnable() {
-                @Override
-                public void run() {
-                    playPauseButton.setImageResource(R.drawable.ic_pause_white);
-                    AnimationUtils.animateView(playPauseButton, AnimationUtils.Type.SCALE_AND_ALPHA, true, 200);
-                }
-            });
-            getRootView().setKeepScreenOn(true);
+        public void onQuitFullscreen(String url, Object... objects) {
+
         }
 
+        //进入小窗口，objects[0]是title，object[1]是当前所处播放器（全屏或非全屏）
         @Override
-        public void onPaused() {
-            super.onPaused();
-            AnimationUtils.animateView(playPauseButton, AnimationUtils.Type.SCALE_AND_ALPHA, false, 80, 0, new Runnable() {
-                @Override
-                public void run() {
-                    playPauseButton.setImageResource(R.drawable.ic_play_arrow_white);
-                    AnimationUtils.animateView(playPauseButton, AnimationUtils.Type.SCALE_AND_ALPHA, true, 200);
-                }
-            });
+        public void onQuitSmallWidget(String url, Object... objects) {
 
-            getRootView().setKeepScreenOn(false);
         }
 
+        //退出小窗口，objects[0]是title，object[1]是当前所处播放器（全屏或非全屏）
         @Override
-        public void onPausedSeek() {
-            super.onPausedSeek();
-            AnimationUtils.animateView(playPauseButton, AnimationUtils.Type.SCALE_AND_ALPHA, false, 100);
-            getRootView().setKeepScreenOn(true);
+        public void onEnterSmallWidget(String url, Object... objects) {
+
         }
 
-
+        //触摸调整声音，objects[0]是title，object[1]是当前所处播放器（全屏或非全屏）
         @Override
-        public void onCompleted() {
-            if (getCurrentRepeatMode() == RepeatMode.REPEAT_ONE) {
-                playPauseButton.setImageResource(R.drawable.ic_pause_white);
-            } else {
-                AnimationUtils.animateView(playPauseButton, AnimationUtils.Type.SCALE_AND_ALPHA, false, 0, 0, new Runnable() {
-                    @Override
-                    public void run() {
-                        playPauseButton.setImageResource(com.hr.musicfm.R.drawable.ic_replay_white);
-                        AnimationUtils.animateView(playPauseButton, AnimationUtils.Type.SCALE_AND_ALPHA, true, 300);
-                    }
-                });
-            }
-            getRootView().setKeepScreenOn(false);
-            super.onCompleted();
+        public void onTouchScreenSeekVolume(String url, Object... objects) {
+
         }
 
-        /*//////////////////////////////////////////////////////////////////////////
-        // Utils
-        //////////////////////////////////////////////////////////////////////////*/
-
+        //触摸调整进度，objects[0]是title，object[1]是当前所处播放器（全屏或非全屏）
         @Override
-        public void hideControls(final long duration, long delay) {
-            if (DEBUG) Log.d(TAG, "hideControls() called with: delay = [" + delay + "]");
-            getControlsVisibilityHandler().removeCallbacksAndMessages(null);
-            getControlsVisibilityHandler().postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    AnimationUtils.animateView(getControlsRoot(), false, duration, 0, new Runnable() {
-                        @Override
-                        public void run() {
-//                            hideSystemUi();
-                        }
-                    });
-                }
-            }, delay);
+        public void onTouchScreenSeekPosition(String url, Object... objects) {
+
         }
 
-        ///////////////////////////////////////////////////////////////////////////
-        // Getters
-        ///////////////////////////////////////////////////////////////////////////
-
-        public TextView getTitleTextView() {
-            return titleTextView;
-        }
-
-        public TextView getChannelTextView() {
-            return channelTextView;
-        }
-
-        public ImageButton getPlayPauseButton() {
-            return playPauseButton;
-        }
-
+        //触摸调整亮度，objects[0]是title，object[1]是当前所处播放器（全屏或非全屏）
         @Override
-        public void onRepeatModeChanged(int i) {
+        public void onTouchScreenSeekLight(String url, Object... objects) {
+
+        }
+
+        //播放错误，objects[0]是title，object[1]是当前所处播放器（全屏或非全屏）
+        @Override
+        public void onPlayError(String url, Object... objects) {
+
+        }
+
+        //点击了空白区域开始播放，objects[0]是title，object[1]是当前所处播放器（全屏或非全屏）
+        @Override
+        public void onClickStartThumb(String url, Object... objects) {
+
+        }
+
+        //点击了播放中的空白区域，objects[0]是title，object[1]是当前所处播放器（全屏或非全屏）
+        @Override
+        public void onClickBlank(String url, Object... objects) {
+
+        }
+
+        //点击了全屏播放中的空白区域，objects[0]是title，object[1]是当前所处播放器（全屏或非全屏）
+        @Override
+        public void onClickBlankFullscreen(String url, Object... objects) {
 
         }
     }
 
-    private class MySimpleOnGestureListener extends GestureDetector.SimpleOnGestureListener implements View.OnTouchListener {
-        @Override
-        public boolean onSingleTapConfirmed(MotionEvent e) {
-            if (DEBUG) Log.d(TAG, "onSingleTapConfirmed() called with: e = [" + e + "]");
-            if (playerImpl.getCurrentState() != BasePlayer.STATE_PLAYING) return true;
+    @Override
+    public void onPause() {
+        super.onPause();
+        detailPlayer.onVideoPause();
+        isPause = true;
+    }
 
-            if (playerImpl.isControlsVisible())
-                playerImpl.hideControls(150, 0);
-            else {
-                playerImpl.showControlsThenHide();
-            }
-            return true;
-        }
-        @Override
-        public boolean onTouch(View v, MotionEvent event) {
-            //noinspection PointlessBooleanExpression
-            if (DEBUG && false) Log.d(TAG, "onTouch() called with: v = [" + v + "], event = [" + event + "]");
-
-            gestureDetector.onTouchEvent(event);
-
-            return true;
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        //如果旋转了就全屏
+        if (isPlay && !isPause) {
+            detailPlayer.onConfigurationChanged(activity, newConfig, orientationUtils);
         }
     }
 
+    private void resolveNormalVideoUI() {
+        //增加title
+        detailPlayer.getTitleTextView().setVisibility(View.GONE);
+        detailPlayer.getBackButton().setVisibility(View.GONE);
+    }
 }
