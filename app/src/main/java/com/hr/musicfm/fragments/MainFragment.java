@@ -110,6 +110,7 @@ public class MainFragment extends Fragment implements TabLayout.OnTabSelectedLis
 
         private int[] tabTitles = new int[]{
                 R.string.tab_main,
+                R.string.tab_Album,
                 R.string.tab_subscriptions
         };
 
@@ -120,10 +121,12 @@ public class MainFragment extends Fragment implements TabLayout.OnTabSelectedLis
         @Override
         public Fragment getItem(int position) {
             switch ( position ) {
-                case 1:
-                    return new SubscriptionFragment();
-                default:
+                case 0:
                     return new BlankFragment();
+                case 1:
+                    return new BlankFragment("https://www.youtube.com/playlist?list=PLIyWtPwrYr7aGROMpZkWIlmUH_Rxxhu8Y");
+                default:
+                    return new SubscriptionFragment();
             }
         }
 

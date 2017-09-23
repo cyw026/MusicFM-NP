@@ -46,6 +46,7 @@ import android.support.multidex.*;
 public class App extends Application {
     private static final String TAG = App.class.toString();
 
+    private static App instance;
     private static boolean useTor;
 
     final Class<? extends ReportSenderFactory>[] reportSenderFactoryClasses
@@ -54,6 +55,7 @@ public class App extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+        instance = this;
 
         // init crashreport
         try {
@@ -94,6 +96,11 @@ public class App extends Application {
         ThemeHelper.setTheme(getApplicationContext());
 
         initNotificationChannel();
+    }
+
+    public static App getInstance(){
+        // 因为我们程序运行后，Application是首先初始化的，如果在这里不用判断instance是否为空
+        return instance;
     }
 
     /**
