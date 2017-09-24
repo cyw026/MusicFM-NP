@@ -478,8 +478,8 @@ public class VideoDetailFragment extends BaseFragment implements StreamExtractor
         StreamInfoCache.getInstance().removeOldEntries();
 
         activityPaused = true;
-        detailPlayer.onVideoPause();
-        isPause = true;
+//        detailPlayer.onVideoPause();
+//        isPause = true;
 //        if (playerImpl.getPlayer() != null) {
 //            playerImpl.setVideoStartPos((int) playerImpl.getPlayer().getCurrentPosition());
 //            playerImpl.destroyPlayer();
