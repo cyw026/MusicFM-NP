@@ -2,6 +2,7 @@ package com.hr.musicfm.info_list;
 
 import android.app.Activity;
 import android.content.Context;
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -22,6 +23,7 @@ import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.AdSize;
 import com.google.android.gms.ads.AdListener;
+import com.google.android.gms.ads.NativeExpressAdView;
 /**
  * Created by Christian Schabesberger on 01.08.16.
  *
@@ -50,7 +52,16 @@ public class InfoListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     private boolean showFooter = false;
     private View header = null;
     private View footer = null;
-    private static final int AD_TYPE = 4;
+    private  Activity activity;
+
+    // The Native Express ad view type.
+    private static final int NATIVE_EXPRESS_AD_VIEW_TYPE = 5;
+    // A Native Express ad is placed in every nth position in the RecyclerView.
+    public static final int ITEMS_PER_AD = 7;
+    // The Native Express ad height.
+    private static final int NATIVE_EXPRESS_AD_HEIGHT = 80;
+    // The Native Express ad unit ID.
+    private static final String AD_UNIT_ID = "ca-app-pub-5814663467390565/6721235260";
 
     public class HFHolder extends RecyclerView.ViewHolder {
         public HFHolder(View v) {
@@ -65,17 +76,55 @@ public class InfoListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         notifyDataSetChanged();
     }
 
-    public class AdHolder extends RecyclerView.ViewHolder {
-        public AdHolder(View v) {
+    /**
+     * The {@link NativeExpressAdViewHolder} class.
+     */
+    public class NativeExpressAdViewHolder extends RecyclerView.ViewHolder {
+
+        NativeExpressAdViewHolder(View v, NativeExpressAdView ad) {
             super(v);
             view = v;
+            adView = ad;
+            ad_card_view = (CardView)itemView.findViewById(R.id.ad_card_view);
+            if (adView.getParent() != null) {
+                ((ViewGroup) adView.getParent()).removeView(adView);
+            }
+            final ViewGroup adCardView = (ViewGroup) this.itemView;
+            adCardView.addView(adView);
         }
         public View view;
+        public CardView ad_card_view;
+        public NativeExpressAdView adView;
+    }
+
+    public class AdViewInfoItem implements InfoItem {
+
+        public String name = "";
+        public String webPageUrl = "";
+
+        public InfoType infoType() {
+            return InfoType.AD_VIEW;
+        }
+        public String getTitle() {
+            return name;
+        }
+        public String getLink() {
+            return webPageUrl;
+        }
+    }
+
+    public class AdHolder extends RecyclerView.ViewHolder {
+        public AdHolder(AdView v) {
+            super(v);
+            adView = v;
+        }
+        public AdView adView;
     }
 
     public InfoListAdapter(Activity a) {
         infoItemBuilder = new InfoItemBuilder(a);
         infoItemList = new ArrayList<>();
+        activity = a;
     }
 
     public void setOnStreamInfoItemSelectedListener
@@ -90,15 +139,17 @@ public class InfoListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
     public void addInfoItemList(List<InfoItem> data) {
         if(data != null) {
-            for(int i=0;i<data.size();i++){
-                if(i > 0 && i%5==0)
-                {
-                    infoItemList.add(null);
-                }
-                infoItemList.add(data.get(i));
-            }
 
-//            infoItemList.addAll(data);
+            List<InfoItem> temp = new ArrayList<>();
+            for (int i = 0; i < data.size(); i ++) {
+                if ((i + 1) % ITEMS_PER_AD == 0) {
+                    final AdViewInfoItem item = new AdViewInfoItem();
+                    temp.add(item);
+                } else {
+                    temp.add(data.get(i));
+                }
+            }
+            infoItemList.addAll(temp);
             notifyDataSetChanged();
         }
     }
@@ -153,10 +204,6 @@ public class InfoListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         }
 
         InfoItem item = infoItemList.get(position);
-
-        if(item==null)
-            return AD_TYPE;
-
         switch(item.infoType()) {
             case STREAM:
                 return 2;
@@ -164,6 +211,8 @@ public class InfoListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
                 return 3;
             case PLAYLIST:
                 return 4;
+            case AD_VIEW:
+                return NATIVE_EXPRESS_AD_VIEW_TYPE;
             default:
                 Log.e(TAG, "Trollolo");
                 return -1;
@@ -185,7 +234,13 @@ public class InfoListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
                         .inflate(R.layout.channel_item, parent, false));
             case 4:
                 Log.e(TAG, "Playlist is not yet implemented");
-                return createAdView(parent);
+                return createAdViewHolder(parent);
+            case NATIVE_EXPRESS_AD_VIEW_TYPE:
+                AdHolder holder = (AdHolder)createAdViewHolder(parent);
+                holder.adView.loadAd(new AdRequest.Builder()
+                        .addTestDevice("40378D17294F10E61A5AAE79217F1BFB")
+                        .build());
+                return holder;
             default:
                 Log.e(TAG, "Trollolo");
                 return null;
@@ -193,48 +248,38 @@ public class InfoListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     }
 
     @Override
-    public void onBindViewHolder(RecyclerView.ViewHolder holder, int i) {
-        //god damn f*** ANDROID SH**
-        if(holder instanceof InfoItemHolder) {
-            if(header != null) {
-                i--;
-            }
-            infoItemBuilder.buildByHolder((InfoItemHolder) holder, infoItemList.get(i));
-        } else if(holder instanceof HFHolder && i == 0 && header != null) {
-            ((HFHolder) holder).view = header;
-        } else if(holder instanceof HFHolder && i == infoItemList.size() && footer != null && showFooter) {
-            ((HFHolder) holder).view = footer;
-        }else if(holder instanceof AdHolder && infoItemList.get(i) == null) {
-            String[] ids = {
-                    "ca-app-pub-5814663467390565/6721235260",
-                    "ca-app-pub-5814663467390565/1286566443",
-                    "ca-app-pub-5814663467390565/6882809374"
-            };
-
-            AdHolder ad = (AdHolder) holder;
-            AdView v = (AdView) ad.view;
-
-//            Random rand = new Random();
-//            int index = rand.nextInt(3);
-//            v.setAdUnitId(ids[index]);
-            AdRequest adRequest = new AdRequest.Builder().build();
-            v.loadAd(adRequest);
+    public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
+        int viewType = getItemViewType(position);
+        switch (viewType) {
+            case 0:
+                ((HFHolder) holder).view = header;
+                break;
+            case 1:
+                ((HFHolder) holder).view = footer;
+                break;
+            case NATIVE_EXPRESS_AD_VIEW_TYPE:
+                AdHolder h = (AdHolder) holder;
+                final AdView adView = h.adView;
+                adView.loadAd(new AdRequest.Builder()
+                        .addTestDevice("40378D17294F10E61A5AAE79217F1BFB")
+                        .build());
+                break;
+            case 2:
+            case 3:
+                if(header != null) {
+                    position--;
+                }
+                infoItemBuilder.buildByHolder((InfoItemHolder) holder, infoItemList.get(position));
+            default:
         }
     }
 
-    public RecyclerView.ViewHolder createAdView(ViewGroup parent) {
+    public RecyclerView.ViewHolder createAdViewHolder(ViewGroup parent) {
 
-        String[] ids = {
-                "ca-app-pub-5814663467390565/6721235260",
-                "ca-app-pub-5814663467390565/1286566443",
-                "ca-app-pub-5814663467390565/6882809374"
-        };
         Context context = parent.getContext();
         AdView v = new AdView(context);
         v.setAdSize(AdSize.SMART_BANNER);
-//        Random rand = new Random();
-//        int index = rand.nextInt(3);
-        v.setAdUnitId(ids[0]);
+        v.setAdUnitId(AD_UNIT_ID);
 
         v.setAdListener(new AdListener() {
             @Override
@@ -269,11 +314,6 @@ public class InfoListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
                 Log.i("Ads", "onAdClosed");
             }
         });
-
-//        float density = parent.getContext().getResources().getDisplayMetrics().density;
-//        int height = Math.round(AdSize.SMART_BANNER.getHeight() * density);
-//        AbsListView.LayoutParams params = new AbsListView.LayoutParams(AbsListView.LayoutParams.MATCH_PARENT,height);
-//        v.setLayoutParams(params);
 
         AdHolder viewHolder = new AdHolder(v);
         return viewHolder;

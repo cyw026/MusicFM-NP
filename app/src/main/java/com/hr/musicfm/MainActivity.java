@@ -35,6 +35,9 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 
+import com.google.android.gms.ads.AdListener;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.InterstitialAd;
 import com.hr.musicfm.database.history.dao.HistoryDAO;
 import com.hr.musicfm.database.history.dao.WatchHistoryDAO;
 import com.hr.musicfm.database.history.model.HistoryEntry;
@@ -70,6 +73,9 @@ public class MainActivity extends AppCompatActivity implements
     private SharedPreferences sharedPreferences;
     private PublishSubject<HistoryEntry> historyEntrySubject;
 
+    //ad
+    private InterstitialAd mInterstitialAd;
+
     /*//////////////////////////////////////////////////////////////////////////
     // Activity's LifeCycle
     //////////////////////////////////////////////////////////////////////////*/
@@ -101,6 +107,45 @@ public class MainActivity extends AppCompatActivity implements
                 .subscribe(createHistoryEntryConsumer());
 
 //        MobileAds.initialize(this, "ca-app-pub-5814663467390565~6175163138");
+        // adMob
+        mInterstitialAd = new InterstitialAd(this);
+        mInterstitialAd.setAdUnitId("ca-app-pub-5814663467390565/8358937334");
+//        mInterstitialAd.setAdUnitId("ca-app-pub-3940256099942544/1033173712");
+
+        mInterstitialAd.loadAd(new AdRequest.Builder().build());
+        mInterstitialAd.setAdListener(new AdListener() {
+            @Override
+            public void onAdLoaded() {
+                // Code to be executed when an ad finishes loading.
+                Log.i("Ads", "onAdLoaded");
+                mInterstitialAd.show();
+            }
+
+            @Override
+            public void onAdFailedToLoad(int errorCode) {
+                // Code to be executed when an ad request fails.
+                Log.i("Ads", "onAdFailedToLoad");
+            }
+
+            @Override
+            public void onAdOpened() {
+                // Code to be executed when the ad is displayed.
+                Log.i("Ads", "onAdOpened");
+//                enterMainPage();
+            }
+
+            @Override
+            public void onAdLeftApplication() {
+                // Code to be executed when the user has left the app.
+                Log.i("Ads", "onAdLeftApplication");
+            }
+
+            @Override
+            public void onAdClosed() {
+                // Code to be executed when when the interstitial ad is closed.
+                Log.i("Ads", "onAdClosed");
+            }
+        });
     }
 
     @NonNull

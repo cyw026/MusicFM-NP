@@ -1,6 +1,14 @@
 apply plugin: 'com.android.application'
 
 android {
+    signingConfigs {
+        release {
+            keyAlias 'key_release'
+            keyPassword 'cai.095352'
+            storeFile file('android.jks')
+            storePassword 'song095352'
+        }
+    }
     compileSdkVersion 26
     buildToolsVersion '26.0.1'
     defaultConfig {
@@ -13,11 +21,6 @@ android {
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
         multiDexEnabled true
-
-        ndk {
-            //APP的build.gradle设置支持的SO库架构
-            abiFilters 'armeabi', 'armeabi-v7a'
-        }
     }
     buildTypes {
         release {
@@ -73,8 +76,8 @@ dependencies {
     compile 'com.android.support:multidex:1.0.1'
     compile 'com.android.support.constraint:constraint-layout:1.0.2'
     compile 'com.jakewharton:butterknife:8.8.1'
+    compile 'com.android.support:cardview-v7:23.1.1'
     annotationProcessor 'com.jakewharton:butterknife-compiler:8.8.1'
-    compile 'com.shuyu:GSYVideoPlayer:2.0.8'
     testCompile 'junit:junit:4.12'
     testCompile 'org.mockito:mockito-core:1.10.19'
     testCompile 'org.json:json:20160810'
@@ -82,7 +85,6 @@ dependencies {
     debugCompile 'com.facebook.stetho:stetho:1.5.0'
     debugCompile 'com.facebook.stetho:stetho-urlconnection:1.5.0'
     debugCompile 'com.android.support:multidex:1.0.1'
-    compile files('libs/classes.jar')
 }
 
 

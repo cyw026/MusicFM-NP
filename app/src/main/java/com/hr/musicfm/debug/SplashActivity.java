@@ -60,71 +60,63 @@ public class SplashActivity extends AppCompatActivity {
      * 设置开屏广告
      */
     private void setupSplashAd() {
-        // 创建开屏容器
-        final RelativeLayout splashLayout = (RelativeLayout) findViewById(R.id.rl_splash);
-        RelativeLayout.LayoutParams params =
-                new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
-//        params.addRule(RelativeLayout.ABOVE, R.id.view_divider);
+
+        startHomeActivity();
 
         // adMob
-        mInterstitialAd = new InterstitialAd(this);
-        mInterstitialAd.setAdUnitId("ca-app-pub-5814663467390565/8358937334");
-//        mInterstitialAd.setAdUnitId("ca-app-pub-3940256099942544/1033173712");
-
-        mInterstitialAd.loadAd(new AdRequest.Builder().build());
-        mInterstitialAd.setAdListener(new AdListener() {
-            @Override
-            public void onAdLoaded() {
-                // Code to be executed when an ad finishes loading.
-                Log.i("Ads", "onAdLoaded");
-                mInterstitialAd.show();
-            }
-
-            @Override
-            public void onAdFailedToLoad(int errorCode) {
-                // Code to be executed when an ad request fails.
-                Log.i("Ads", "onAdFailedToLoad");
-                startHomeActivity();
-            }
-
-            @Override
-            public void onAdOpened() {
-                // Code to be executed when the ad is displayed.
-                Log.i("Ads", "onAdOpened");
-//                enterMainPage();
-            }
-
-            @Override
-            public void onAdLeftApplication() {
-                // Code to be executed when the user has left the app.
-                Log.i("Ads", "onAdLeftApplication");
-                startHomeActivity();
-            }
-
-            @Override
-            public void onAdClosed() {
-                // Code to be executed when when the interstitial ad is closed.
-                Log.i("Ads", "onAdClosed");
-                startHomeActivity();
-            }
-        });
-//        if (mInterstitialAd.isLoaded()) {
-//            mInterstitialAd.show();
-//        } else {
-//            Log.d("TAG", "The interstitial wasn't loaded yet.");
-//        }
-
-        Log.i("jingcl", "500ms后出现广告-----1");
-        mHandler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                if( mInterstitialAd.isLoaded()) {
-                    enterMainPage();
-                } else {
-                    startHomeActivity();
-                }
-            }
-        }, 2000);
+//        mInterstitialAd = new InterstitialAd(this);
+//        mInterstitialAd.setAdUnitId("ca-app-pub-5814663467390565/8358937334");
+////        mInterstitialAd.setAdUnitId("ca-app-pub-3940256099942544/1033173712");
+//
+//        mInterstitialAd.loadAd(new AdRequest.Builder().build());
+//        mInterstitialAd.setAdListener(new AdListener() {
+//            @Override
+//            public void onAdLoaded() {
+//                // Code to be executed when an ad finishes loading.
+//                Log.i("Ads", "onAdLoaded");
+//                mInterstitialAd.show();
+//            }
+//
+//            @Override
+//            public void onAdFailedToLoad(int errorCode) {
+//                // Code to be executed when an ad request fails.
+//                Log.i("Ads", "onAdFailedToLoad");
+//                startHomeActivity();
+//            }
+//
+//            @Override
+//            public void onAdOpened() {
+//                // Code to be executed when the ad is displayed.
+//                Log.i("Ads", "onAdOpened");
+////                enterMainPage();
+//            }
+//
+//            @Override
+//            public void onAdLeftApplication() {
+//                // Code to be executed when the user has left the app.
+//                Log.i("Ads", "onAdLeftApplication");
+//                startHomeActivity();
+//            }
+//
+//            @Override
+//            public void onAdClosed() {
+//                // Code to be executed when when the interstitial ad is closed.
+//                Log.i("Ads", "onAdClosed");
+//                startHomeActivity();
+//            }
+//        });
+//
+//        Log.i("jingcl", "500ms后出现广告-----1");
+//        mHandler.postDelayed(new Runnable() {
+//            @Override
+//            public void run() {
+//                if( mInterstitialAd.isLoaded()) {
+//                    enterMainPage();
+//                } else {
+//                    startHomeActivity();
+//                }
+//            }
+//        }, 2000);
     }
 
 
