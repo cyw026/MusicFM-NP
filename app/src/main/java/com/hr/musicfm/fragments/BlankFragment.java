@@ -200,7 +200,7 @@ public class BlankFragment extends BaseFragment implements PlayListExtractorWork
             @Override
             public void selected(int serviceId, String url, String title) {
                 if (DEBUG) Log.d(TAG, "selected() called with: serviceId = [" + serviceId + "], url = [" + url + "], title = [" + title + "]");
-                NavigationHelper.openVideoDetailFragment(getParentFragment().getFragmentManager(), serviceId, url, title, true);
+                NavigationHelper.openVideoDetailFragment(getParentFragment().getFragmentManager(), serviceId, url, title, false);
             }
         });
 

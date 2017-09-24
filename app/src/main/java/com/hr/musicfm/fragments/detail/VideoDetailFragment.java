@@ -5,8 +5,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.res.Configuration;
-import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -28,33 +26,22 @@ import android.text.method.LinkMovementMethod;
 import android.text.util.Linkify;
 import android.util.Log;
 import android.util.TypedValue;
-import android.view.GestureDetector;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.PopupMenu;
 import android.widget.RelativeLayout;
-import android.widget.SeekBar;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.ads.AdListener;
-import com.google.android.gms.ads.AdRequest;
-import com.google.android.gms.ads.InterstitialAd;
-import com.hr.musicfm.App;
-import com.hr.musicfm.player.BasePlayer;
-import com.hr.musicfm.player.VideoPlayer;
 import com.nirhart.parallaxscroll.views.ParallaxScrollView;
 import com.nostra13.universalimageloader.core.assist.FailReason;
 import com.nostra13.universalimageloader.core.listener.SimpleImageLoadingListener;
@@ -82,39 +69,15 @@ import com.hr.musicfm.util.Utils;
 
 import com.hr.musicfm.R;
 import com.hr.musicfm.workers.StreamExtractorWorker;
-import com.shuyu.gsyvideoplayer.GSYVideoManager;
-import com.shuyu.gsyvideoplayer.listener.LockClickListener;
-import com.shuyu.gsyvideoplayer.utils.OrientationUtils;
-import com.shuyu.gsyvideoplayer.video.ListGSYVideoPlayer;
-import com.shuyu.gsyvideoplayer.GSYBaseActivityDetail;
-import com.shuyu.gsyvideoplayer.GSYVideoManager;
-import com.shuyu.gsyvideoplayer.builder.GSYVideoOptionBuilder;
-import com.shuyu.gsyvideoplayer.video.base.GSYBaseVideoPlayer;
-import com.shuyu.gsyvideoplayer.video.base.GSYVideoPlayer;
-import com.shuyu.gsyvideoplayer.listener.LockClickListener;
-import com.shuyu.gsyvideoplayer.model.GSYVideoModel;
-import com.shuyu.gsyvideoplayer.video.ListGSYVideoPlayer;
-import com.shuyu.gsyvideoplayer.listener.StandardVideoAllCallBack;
-import com.shuyu.gsyvideoplayer.video.base.GSYVideoPlayer;
-import com.shuyu.gsyvideoplayer.listener.LockClickListener;
-import com.shuyu.gsyvideoplayer.model.GSYVideoModel;
-import com.shuyu.gsyvideoplayer.utils.OrientationUtils;
-import com.shuyu.gsyvideoplayer.video.ListGSYVideoPlayer;
-import com.shuyu.gsyvideoplayer.video.StandardGSYVideoPlayer;
-
-
-import butterknife.BindView;
-import butterknife.ButterKnife;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Stack;
-import java.util.List;
 
 import static com.hr.musicfm.util.AnimationUtils.animateView;
 
 public class VideoDetailFragment extends BaseFragment implements StreamExtractorWorker.OnStreamInfoReceivedListener, SharedPreferences.OnSharedPreferenceChangeListener, View.OnClickListener {
-    private static final String TAG = ".VideoDetailFragment";
+    private final String TAG = "VideoDetailFragment@" + Integer.toHexString(hashCode());
 
     // Amount of videos to show on start
     private static final int INITIAL_RELATED_VIDEOS = 8;
@@ -195,21 +158,6 @@ public class VideoDetailFragment extends BaseFragment implements StreamExtractor
     private ImageButton relatedStreamExpandButton;
     private OnVideoPlayListener onVideoPlayedListener;
 
-    private boolean activityPaused;
-
-    @BindView(R.id.detail_player)
-    ListGSYVideoPlayer detailPlayer;
-
-    protected boolean isPlay;
-
-    protected boolean isPause;
-
-    protected OrientationUtils orientationUtils;
-
-    //ad
-    private InterstitialAd mInterstitialAd;
-
-
     /*////////////////////////////////////////////////////////////////////////*/
 
     public static VideoDetailFragment getInstance(int serviceId, String url) {
@@ -233,8 +181,6 @@ public class VideoDetailFragment extends BaseFragment implements StreamExtractor
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // retain this fragment
-        setRetainInstance(true);
         if (DEBUG) Log.d(TAG, "onCreate() called with: savedInstanceState = [" + savedInstanceState + "]");
 
         if (savedInstanceState != null) {
@@ -270,58 +216,12 @@ public class VideoDetailFragment extends BaseFragment implements StreamExtractor
             backgroundHandlerThread = handlerThread;
             backgroundHandler = new Handler(handlerThread.getLooper(), new BackgroundCallback(uiHandler, getContext()));
         }
-
-        // adMob
-        mInterstitialAd = new InterstitialAd(activity);
-        mInterstitialAd.setAdUnitId("ca-app-pub-5814663467390565/4043146164");
-        // MainVideoPlayer ad
-//        mInterstitialAd.setAdUnitId("ca-app-pub-5814663467390565/9908605575");
-        //test
-//        mInterstitialAd.setAdUnitId("ca-app-pub-3940256099942544/1033173712");
-        mInterstitialAd.loadAd(new AdRequest.Builder().build());
-        mInterstitialAd.setAdListener(new AdListener() {
-            @Override
-            public void onAdLoaded() {
-                // Code to be executed when an ad finishes loading.
-                Log.i("Ads", "onAdLoaded");
-            }
-
-            @Override
-            public void onAdFailedToLoad(int errorCode) {
-                // Code to be executed when an ad request fails.
-                Log.i("Ads", "onAdFailedToLoad");
-            }
-
-            @Override
-            public void onAdOpened() {
-                // Code to be executed when the ad is displayed.
-                Log.i("Ads", "onAdOpened");
-            }
-
-            @Override
-            public void onAdLeftApplication() {
-                // Code to be executed when the user has left the app.
-                Log.i("Ads", "onAdLeftApplication");
-            }
-
-            @Override
-            public void onAdClosed() {
-                // Code to be executed when when the interstitial ad is closed.
-                Log.i("Ads", "onAdClosed");
-                // Load the next interstitial.
-                mInterstitialAd.loadAd(new AdRequest.Builder().build());
-            }
-        });
-
-//        playerImpl = new VideoDetailFragment.VideoPlayerImpl();
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         if (DEBUG) Log.d(TAG, "onCreateView() called with: inflater = [" + inflater + "], container = [" + container + "], savedInstanceState = [" + savedInstanceState + "]");
-        View view = inflater.inflate(R.layout.fragment_video_detail, container, false);
-        ButterKnife.bind(this, view);
-        return view;
+        return inflater.inflate(R.layout.fragment_video_detail, container, false);
     }
 
     @Override
@@ -329,98 +229,6 @@ public class VideoDetailFragment extends BaseFragment implements StreamExtractor
         super.onViewCreated(rootView, savedInstanceState);
         if (currentStreamInfo == null) selectAndLoadVideo(serviceId, videoUrl, videoTitle);
         else prepareAndLoad(currentStreamInfo, false);
-
-        //String url = "http://baobab.wd jcdn.com/14564977406580.mp4";
-//        List<GSYVideoModel> urls = new ArrayList<>();
-//        urls.add(new GSYVideoModel("http://baobab.wdjcdn.com/14564977406580.mp4", "标题1"));
-//        urls.add(new GSYVideoModel("http://9890.vod.myqcloud.com/9890_4e292f9a3dd011e6b4078980237cc3d3.f20.mp4", "标题2"));
-//        urls.add(new GSYVideoModel("http://baobab.wdjcdn.com/14564977406580.mp4", "标题3"));
-//        urls.add(new GSYVideoModel("http://9890.vod.myqcloud.com/9890_4e292f9a3dd011e6b4078980237cc3d3.f20.mp4", "标题4"));
-        GSYVideoManager.instance().setVideoType(activity, 1);
-//        detailPlayer.setUp(urls, true, 0);
-
-        //增加封面
-        ImageView imageView = new ImageView(activity);
-        imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
-        imageView.setImageResource(com.hr.musicfm.R.drawable.dummy_thumbnail_dark);
-        detailPlayer.setThumbImageView(imageView);
-
-        resolveNormalVideoUI();
-
-        //外部辅助的旋转，帮助全屏
-        orientationUtils = new OrientationUtils(activity, detailPlayer);
-        //初始化不打开外部的旋转
-        orientationUtils.setEnable(false);
-
-        detailPlayer.setIsTouchWiget(true);
-        //关闭自动旋转
-        detailPlayer.setRotateViewAuto(false);
-        detailPlayer.setLockLand(false);
-        detailPlayer.setShowFullAnimation(false);
-        detailPlayer.setNeedLockFull(true);
-
-        detailPlayer.getFullscreenButton().setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                //直接横屏
-                orientationUtils.resolveByClick();
-
-                //第一个true是否需要隐藏actionbar，第二个true是否需要隐藏statusbar
-                detailPlayer.startWindowFullscreen(activity, true, true);
-            }
-        });
-
-        detailPlayer.setStandardVideoAllCallBack(new SampleListener() {
-            @Override
-            public void onPrepared(String url, Object... objects) {
-                super.onPrepared(url, objects);
-                //开始播放了才能旋转和全屏
-                orientationUtils.setEnable(true);
-                isPlay = true;
-            }
-
-            @Override
-            public void onAutoComplete(String url, Object... objects) {
-                super.onAutoComplete(url, objects);
-            }
-
-            @Override
-            public void onClickStartError(String url, Object... objects) {
-                super.onClickStartError(url, objects);
-            }
-
-            @Override
-            public void onQuitFullscreen(String url, Object... objects) {
-                super.onQuitFullscreen(url, objects);
-                if (orientationUtils != null) {
-                    orientationUtils.backToProtVideo();
-                }
-                if (mInterstitialAd.isLoaded()) {
-                    mInterstitialAd.show();
-                } else {
-                    Log.d("TAG", "The interstitial wasn't loaded yet.");
-                }
-            }
-
-            @Override
-            public void onEnterFullscreen(String url, Object... objects) {
-                super.onEnterFullscreen(url, objects);
-                //隐藏调全屏对象的返回按键
-                GSYVideoPlayer gsyVideoPlayer = (GSYVideoPlayer)objects[1];
-                gsyVideoPlayer.getBackButton().setVisibility(View.GONE);
-                gsyVideoPlayer.getTitleTextView().setVisibility(View.GONE);
-            }
-        });
-
-        detailPlayer.setLockClickListener(new LockClickListener() {
-            @Override
-            public void onClick(View view, boolean lock) {
-                if (orientationUtils != null) {
-                    //配合下方的onConfigurationChanged
-                    orientationUtils.setEnable(!lock);
-                }
-            }
-        });
     }
 
     @Override
@@ -454,19 +262,6 @@ public class VideoDetailFragment extends BaseFragment implements StreamExtractor
         // Check if it was loading when the activity was stopped/paused,
         // because when this happen, the curExtractorWorker is cancelled
         if (wasLoading.getAndSet(false)) selectAndLoadVideo(serviceId, videoUrl, videoTitle);
-
-//        if (activityPaused) {
-//            if (playerImpl.getPlayer() != null) {
-//                playerImpl.play(true);
-//            } else {
-//                playerImpl.initPlayer();
-//                playerImpl.getPlayPauseButton().setImageResource(com.hr.musicfm.R.drawable.ic_play_arrow_white);
-//                playerImpl.play(false);
-//                activityPaused = false;
-//            }
-//        }
-        detailPlayer.onVideoResume();
-        isPause = false;
     }
 
     @Override
@@ -475,14 +270,6 @@ public class VideoDetailFragment extends BaseFragment implements StreamExtractor
         wasLoading.set(curExtractorWorker != null && curExtractorWorker.isRunning());
         if (curExtractorWorker != null && curExtractorWorker.isRunning()) curExtractorWorker.cancel();
         StreamInfoCache.getInstance().removeOldEntries();
-
-        activityPaused = true;
-        detailPlayer.onVideoPause();
-        isPause = true;
-//        if (playerImpl.getPlayer() != null) {
-//            playerImpl.setVideoStartPos((int) playerImpl.getPlayer().getCurrentPosition());
-//            playerImpl.destroyPlayer();
-//        }
     }
 
     @Override
@@ -494,16 +281,12 @@ public class VideoDetailFragment extends BaseFragment implements StreamExtractor
         backgroundHandlerThread = null;
         backgroundHandler = null;
         PreferenceManager.getDefaultSharedPreferences(activity).unregisterOnSharedPreferenceChangeListener(this);
-//        if (playerImpl != null) playerImpl.destroy();
-        GSYVideoPlayer.releaseAllVideos();
-        if (orientationUtils != null)
-            orientationUtils.releaseListener();
     }
 
     @Override
     public void onDestroyView() {
         if (DEBUG) Log.d(TAG, "onDestroyView() called");
-//        thumbnailImageView.setImageBitmap(null);
+        thumbnailImageView.setImageBitmap(null);
         relatedStreamsView.removeAllViews();
         spinnerToolbar.setOnItemSelectedListener(null);
 
@@ -616,10 +399,9 @@ public class VideoDetailFragment extends BaseFragment implements StreamExtractor
                     NavigationHelper.openChannelFragment(getFragmentManager(), currentStreamInfo.service_id, currentStreamInfo.channel_url, currentStreamInfo.uploader);
                 }
                 break;
-//            case com.hr.musicfm.R.id.detail_thumbnail_root_layout:
-//            case R.id.detail_thumbnail_play_button:
-//                playVideo(currentStreamInfo);
-//                break;
+            case com.hr.musicfm.R.id.detail_thumbnail_root_layout:
+                playVideo(currentStreamInfo);
+                break;
             case R.id.detail_title_root_layout:
                 toggleTitleAndDescription();
                 break;
@@ -749,10 +531,8 @@ public class VideoDetailFragment extends BaseFragment implements StreamExtractor
         parallaxScrollRootView = (ParallaxScrollView) rootView.findViewById(com.hr.musicfm.R.id.detail_main_content);
 
         thumbnailBackgroundButton = rootView.findViewById(R.id.detail_thumbnail_root_layout);
-//        thumbnailImageView = (ImageView) rootView.findViewById(R.id.endScreen);
-//        thumbnailPlayButton = (ImageView) rootView.findViewById(R.id.detail_thumbnail_play_button);
-//        playerImpl.setup(rootView.findViewById(R.id.detail_thumbnail_root_layout));
-
+        thumbnailImageView = (ImageView) rootView.findViewById(R.id.detail_thumbnail_image_view);
+        thumbnailPlayButton = (ImageView) rootView.findViewById(R.id.detail_thumbnail_play_button);
 
         contentRootLayoutHiding = (LinearLayout) rootView.findViewById(com.hr.musicfm.R.id.detail_content_root_hiding);
 
@@ -810,26 +590,17 @@ public class VideoDetailFragment extends BaseFragment implements StreamExtractor
         detailControlsBackground.setOnClickListener(this);
         detailControlsPopup.setOnClickListener(this);
         relatedStreamExpandButton.setOnClickListener(this);
-//        thumbnailPlayButton.setOnClickListener(this);
     }
 
     private void initThumbnailViews(StreamInfo info) {
-        ImageView thumbImageView = (ImageView) detailPlayer.getThumbImageView();
-        if (thumbImageView == null) {
-            thumbImageView = new ImageView(activity);
-            thumbImageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
-            thumbImageView.setImageResource(com.hr.musicfm.R.drawable.dummy_thumbnail_dark);
-            detailPlayer.setThumbImageView(thumbImageView);
-        }
         if (info.thumbnail_url != null && !info.thumbnail_url.isEmpty()) {
-            imageLoader.displayImage(info.thumbnail_url, thumbImageView, displayImageOptions, new SimpleImageLoadingListener() {
+            imageLoader.displayImage(info.thumbnail_url, thumbnailImageView, displayImageOptions, new SimpleImageLoadingListener() {
                 @Override
                 public void onLoadingFailed(String imageUri, View view, FailReason failReason) {
                     ErrorActivity.reportError(activity, failReason.getCause(), null, activity.findViewById(android.R.id.content), ErrorActivity.ErrorInfo.make(UserAction.LOAD_IMAGE, NewPipe.getNameOfService(currentStreamInfo.service_id), imageUri, com.hr.musicfm.R.string.could_not_load_thumbnails));
                 }
             });
-        }
-//        } else thumbnailImageView.setImageResource(com.hr.musicfm.R.drawable.dummy_thumbnail_dark);
+        } else thumbnailImageView.setImageResource(com.hr.musicfm.R.drawable.dummy_thumbnail_dark);
 
         if (info.uploader_thumbnail_url != null && !info.uploader_thumbnail_url.isEmpty()) {
             imageLoader.displayImage(info.uploader_thumbnail_url, uploaderThumb, displayImageOptions,
@@ -868,31 +639,6 @@ public class VideoDetailFragment extends BaseFragment implements StreamExtractor
         }
     }
 
-    private void initPlayList(StreamInfo info) {
-
-
-
-        List<GSYVideoModel> urls = new ArrayList<>();
-        urls.add(new GSYVideoModel(getSelectedVideoStream().url, info.title));
-
-
-//        if (info.related_streams != null && !info.related_streams.isEmpty() && showRelatedStreams) {
-//            //long first = System.nanoTime(), each;
-//            int to = info.related_streams.size() >= INITIAL_RELATED_VIDEOS ? INITIAL_RELATED_VIDEOS : info.related_streams.size();
-//            for (int i = 0; i < to; i++) {
-//                InfoItem item = info.related_streams.get(i);
-//
-//                urls.add(new GSYVideoModel(getSelectedVideoStream().url, info.title));
-//            }
-//        }
-
-        if (detailPlayer != null) {
-            detailPlayer.setUp(urls, true, 0);
-            if (autoPlayEnabled) {
-                detailPlayer.startPlayLogic();
-            }
-        }
-    }
     /*//////////////////////////////////////////////////////////////////////////
     // Menu
     //////////////////////////////////////////////////////////////////////////*/
@@ -1013,14 +759,6 @@ public class VideoDetailFragment extends BaseFragment implements StreamExtractor
 
     public boolean onActivityBackPressed() {
         if (DEBUG) Log.d(TAG, "onActivityBackPressed() called");
-
-        if (orientationUtils != null) {
-            orientationUtils.backToProtVideo();
-        }
-        if (StandardGSYVideoPlayer.backFromWindowFull(activity)) {
-            return true;
-        }
-
         // That means that we are on the start of the stack,
         // return false to let the MainActivity handle the onBack
         if (stack.size() == 1) return false;
@@ -1040,7 +778,6 @@ public class VideoDetailFragment extends BaseFragment implements StreamExtractor
         } else {
             selectAndLoadVideo(0, peek.getUrl(), !TextUtils.isEmpty(peek.getTitle()) ? peek.getTitle() : "");
         }
-
         return true;
     }
 
@@ -1115,10 +852,10 @@ public class VideoDetailFragment extends BaseFragment implements StreamExtractor
         videoTitleToggleArrow.setVisibility(View.GONE);
         videoTitleRoot.setClickable(false);
 
-//        AnimationUtils.animateView(thumbnailPlayButton, false, 50);
-//        imageLoader.cancelDisplayTask(thumbnailImageView);
+        AnimationUtils.animateView(thumbnailPlayButton, false, 50);
+        imageLoader.cancelDisplayTask(thumbnailImageView);
         imageLoader.cancelDisplayTask(uploaderThumb);
-//        thumbnailImageView.setImageBitmap(null);
+        thumbnailImageView.setImageBitmap(null);
         uploaderThumb.setImageBitmap(null);
 
         if (info != null) {
@@ -1146,12 +883,6 @@ public class VideoDetailFragment extends BaseFragment implements StreamExtractor
             AnimationUtils.animateView(loadingProgressBar, true, 200);
             AnimationUtils.animateView(contentRootLayoutHiding, false, 200);
         }
-
-        if (mInterstitialAd.isLoaded()) {
-            mInterstitialAd.show();
-        } else {
-            Log.d("TAG", "The interstitial wasn't loaded yet.");
-        }
     }
 
     private void handleStreamInfo(@NonNull final StreamInfo info, boolean fromNetwork) {
@@ -1160,7 +891,7 @@ public class VideoDetailFragment extends BaseFragment implements StreamExtractor
         selectVideo(info.service_id, info.webpage_url, info.title);
 
         loadingProgressBar.setVisibility(View.GONE);
-//        AnimationUtils.animateView(thumbnailPlayButton, true, 200);
+        AnimationUtils.animateView(thumbnailPlayButton, true, 200);
 
         // Since newpipe is designed to work even if certain information is not available,
         // the UI has to react on missing information.
@@ -1203,7 +934,6 @@ public class VideoDetailFragment extends BaseFragment implements StreamExtractor
         setupActionBarHandler(info);
         initThumbnailViews(info);
         initRelatedVideos(info);
-        initPlayList(info);
         if (wasRelatedStreamsExpanded) {
             toggleExpandRelatedVideos(currentStreamInfo);
             wasRelatedStreamsExpanded = false;
@@ -1213,6 +943,12 @@ public class VideoDetailFragment extends BaseFragment implements StreamExtractor
 
         prepareDescription(info.description);
         prepareUploadDate(info.upload_date);
+
+        if (autoPlayEnabled) {
+            playVideo(info);
+            // Only auto play in the first open
+            autoPlayEnabled = false;
+        }
     }
 
     private void prepareUploadDate(final String uploadDate) {
@@ -1283,18 +1019,7 @@ public class VideoDetailFragment extends BaseFragment implements StreamExtractor
                     || (Build.VERSION.SDK_INT < 16);
             if (!useOldPlayer) {
                 // ExoPlayer
-                mIntent = activity.getIntent();
-                mIntent.putExtra(BasePlayer.VIDEO_TITLE, info.title)
-                        .putExtra(BasePlayer.VIDEO_URL, info.webpage_url)
-                        .putExtra(BasePlayer.VIDEO_THUMBNAIL_URL, info.thumbnail_url)
-                        .putExtra(BasePlayer.CHANNEL_NAME, info.uploader)
-                        .putExtra(VideoPlayer.INDEX_SEL_VIDEO_STREAM, actionBarHandler.getSelectedVideoStream())
-                        .putExtra(VideoPlayer.VIDEO_STREAMS_LIST, Utils.getSortedStreamVideosList(activity, info.video_streams, info.video_only_streams, false))
-                        .putExtra(VideoPlayer.VIDEO_ONLY_AUDIO_STREAM, Utils.getHighestQualityAudio(info.audio_streams));
-                if (info.start_position > 0) mIntent.putExtra(BasePlayer.START_POSITION, info.start_position * 1000);
-
-//                playerImpl.handleIntent(mIntent);
-//                mIntent = NavigationHelper.getOpenVideoPlayerIntent(activity, MainVideoPlayer.class, info, actionBarHandler.getSelectedVideoStream());
+                mIntent = NavigationHelper.getOpenVideoPlayerIntent(activity, MainVideoPlayer.class, info, actionBarHandler.getSelectedVideoStream());
             } else {
                 // Internal Player
                 mIntent = new Intent(activity, PlayVideoActivity.class)
@@ -1302,9 +1027,8 @@ public class VideoDetailFragment extends BaseFragment implements StreamExtractor
                         .putExtra(PlayVideoActivity.STREAM_URL, selectedVideoStream.url)
                         .putExtra(PlayVideoActivity.VIDEO_URL, info.webpage_url)
                         .putExtra(PlayVideoActivity.START_POSITION, info.start_position);
-                startActivity(mIntent);
             }
-
+            startActivity(mIntent);
         }
     }
 
@@ -1327,13 +1051,9 @@ public class VideoDetailFragment extends BaseFragment implements StreamExtractor
         boolean isPortrait = getResources().getDisplayMetrics().heightPixels > getResources().getDisplayMetrics().widthPixels;
         int height = isPortrait ? (int) (getResources().getDisplayMetrics().widthPixels / (16.0f / 9.0f))
                 : (int) (getResources().getDisplayMetrics().heightPixels / 2f);
-
-        thumbnailBackgroundButton.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, height));
-//        playerImpl.setMinimumHeight(height);
-
-//        thumbnailImageView.setScaleType(isPortrait ? ImageView.ScaleType.CENTER_CROP : ImageView.ScaleType.FIT_CENTER);
-//        thumbnailImageView.setLayoutParams(new FrameLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, height));
-//        thumbnailImageView.setMinimumHeight(height);
+        thumbnailImageView.setScaleType(isPortrait ? ImageView.ScaleType.CENTER_CROP : ImageView.ScaleType.FIT_CENTER);
+        thumbnailImageView.setLayoutParams(new FrameLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, height));
+        thumbnailImageView.setMinimumHeight(height);
     }
 
     public String getShortCount(Long viewCount) {
@@ -1377,14 +1097,14 @@ public class VideoDetailFragment extends BaseFragment implements StreamExtractor
     }
 
     private void setErrorImage(final int imageResource) {
-//        if (thumbnailImageView == null || activity == null) return;
-//        thumbnailImageView.setImageDrawable(ContextCompat.getDrawable(activity, imageResource));
-//        AnimationUtils.animateView(thumbnailImageView, false, 0, 0, new Runnable() {
-//            @Override
-//            public void run() {
-//                AnimationUtils.animateView(thumbnailImageView, true, 500);
-//            }
-//        });
+        if (thumbnailImageView == null || activity == null) return;
+        thumbnailImageView.setImageDrawable(ContextCompat.getDrawable(activity, imageResource));
+        AnimationUtils.animateView(thumbnailImageView, false, 0, 0, new Runnable() {
+            @Override
+            public void run() {
+                AnimationUtils.animateView(thumbnailImageView, true, 500);
+            }
+        });
     }
 
     @Override
@@ -1547,156 +1267,5 @@ public class VideoDetailFragment extends BaseFragment implements StreamExtractor
          * @param audioStream the audio stream that is played
          */
         void onBackgroundPlayed(StreamInfo streamInfo, AudioStream audioStream);
-    }
-
-    public class SampleListener implements StandardVideoAllCallBack {
-
-        //加载成功，objects[0]是title，object[1]是当前所处播放器（全屏或非全屏）
-        @Override
-        public void onPrepared(String url, Object... objects) {
-
-        }
-
-        //点击了开始按键播放，objects[0]是title，object[1]是当前所处播放器（全屏或非全屏）
-        @Override
-        public void onClickStartIcon(String url, Object... objects) {
-
-        }
-
-        //点击了错误状态下的开始按键，objects[0]是title，object[1]是当前所处播放器（全屏或非全屏）
-        @Override
-        public void onClickStartError(String url, Object... objects) {
-
-        }
-
-        //点击了播放状态下的开始按键--->停止，objects[0]是title，object[1]是当前所处播放器（全屏或非全屏）
-        @Override
-        public void onClickStop(String url, Object... objects) {
-
-        }
-
-        //点击了全屏播放状态下的开始按键--->停止，objects[0]是title，object[1]是当前所处播放器（全屏或非全屏）
-        @Override
-        public void onClickStopFullscreen(String url, Object... objects) {
-
-        }
-
-        //点击了暂停状态下的开始按键--->播放，objects[0]是title，object[1]是当前所处播放器（全屏或非全屏）
-        @Override
-        public void onClickResume(String url, Object... objects) {
-
-        }
-
-        //点击了全屏暂停状态下的开始按键--->播放，objects[0]是title，object[1]是当前所处播放器（全屏或非全屏）
-        @Override
-        public void onClickResumeFullscreen(String url, Object... objects) {
-
-        }
-
-        //点击了空白弹出seekbar，objects[0]是title，object[1]是当前所处播放器（全屏或非全屏）
-        @Override
-        public void onClickSeekbar(String url, Object... objects) {
-
-        }
-
-        //点击了全屏的seekbar，objects[0]是title，object[1]是当前所处播放器（全屏或非全屏）
-        @Override
-        public void onClickSeekbarFullscreen(String url, Object... objects) {
-
-        }
-
-        //播放完了，objects[0]是title，object[1]是当前所处播放器（全屏或非全屏）
-        @Override
-        public void onAutoComplete(String url, Object... objects) {
-
-        }
-
-        //进去全屏，objects[0]是title，object[1]是当前所处播放器（全屏或非全屏）
-        @Override
-        public void onEnterFullscreen(String url, Object... objects) {
-
-        }
-
-        //退出全屏，objects[0]是title，object[1]是当前所处播放器（全屏或非全屏）
-        @Override
-        public void onQuitFullscreen(String url, Object... objects) {
-
-        }
-
-        //进入小窗口，objects[0]是title，object[1]是当前所处播放器（全屏或非全屏）
-        @Override
-        public void onQuitSmallWidget(String url, Object... objects) {
-
-        }
-
-        //退出小窗口，objects[0]是title，object[1]是当前所处播放器（全屏或非全屏）
-        @Override
-        public void onEnterSmallWidget(String url, Object... objects) {
-
-        }
-
-        //触摸调整声音，objects[0]是title，object[1]是当前所处播放器（全屏或非全屏）
-        @Override
-        public void onTouchScreenSeekVolume(String url, Object... objects) {
-
-        }
-
-        //触摸调整进度，objects[0]是title，object[1]是当前所处播放器（全屏或非全屏）
-        @Override
-        public void onTouchScreenSeekPosition(String url, Object... objects) {
-
-        }
-
-        //触摸调整亮度，objects[0]是title，object[1]是当前所处播放器（全屏或非全屏）
-        @Override
-        public void onTouchScreenSeekLight(String url, Object... objects) {
-
-        }
-
-        //播放错误，objects[0]是title，object[1]是当前所处播放器（全屏或非全屏）
-        @Override
-        public void onPlayError(String url, Object... objects) {
-
-        }
-
-        //点击了空白区域开始播放，objects[0]是title，object[1]是当前所处播放器（全屏或非全屏）
-        @Override
-        public void onClickStartThumb(String url, Object... objects) {
-
-        }
-
-        //点击了播放中的空白区域，objects[0]是title，object[1]是当前所处播放器（全屏或非全屏）
-        @Override
-        public void onClickBlank(String url, Object... objects) {
-
-        }
-
-        //点击了全屏播放中的空白区域，objects[0]是title，object[1]是当前所处播放器（全屏或非全屏）
-        @Override
-        public void onClickBlankFullscreen(String url, Object... objects) {
-
-        }
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        detailPlayer.onVideoPause();
-        isPause = true;
-    }
-
-    @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-        //如果旋转了就全屏
-        if (isPlay && !isPause) {
-            detailPlayer.onConfigurationChanged(activity, newConfig, orientationUtils);
-        }
-    }
-
-    private void resolveNormalVideoUI() {
-        //增加title
-        detailPlayer.getTitleTextView().setVisibility(View.GONE);
-        detailPlayer.getBackButton().setVisibility(View.GONE);
     }
 }
